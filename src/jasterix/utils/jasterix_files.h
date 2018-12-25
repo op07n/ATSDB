@@ -11,6 +11,7 @@ namespace Files
 {
 
 bool fileExists(const std::string& path);
+size_t fileSize(const std::string& path);
 bool directoryExists(const std::string& path);
 std::vector<std::string> getFilesInDirectory (const std::string& path);
 

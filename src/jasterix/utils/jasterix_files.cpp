@@ -18,6 +18,12 @@ bool fileExists(const std::string& path)
     return boost::filesystem::exists(path);
 }
 
+size_t fileSize(const std::string& path)
+{
+    assert (fileExists(path));
+    return boost::filesystem::file_size(path);
+}
+
 bool directoryExists(const std::string& path)
 {
     return boost::filesystem::exists(path) && boost::filesystem::is_directory(path);
