@@ -1,0 +1,24 @@
+{
+  "name": "asterix_record",
+  "items" : [
+    {
+       "name" : "category",
+       "type": "fixed_bytes",
+       "length" : 1,
+       "data_type" : "uint"
+    },
+    {
+       "name" : "record_length",
+       "type": "fixed_bytes",
+       "length" : 2,
+       "reverse" : true,
+       "data_type" : "uint"
+    },
+    {
+       "name" : "record_content",
+       "type": "dynamic_bytes",
+       "substract_previous" : true,
+       "length_variable": "record_length"
+    }
+  ]
+}
