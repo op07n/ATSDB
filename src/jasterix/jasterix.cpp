@@ -51,12 +51,18 @@ jASTERIX::jASTERIX(const std::string& filename, const std::string& definition_pa
     if (!fileExists(definition_path_+"/framings/"+framing_+".json"))
         throw invalid_argument ("jASTERIX called with unknown framing '"+framing_+"'");
 
+    if (!fileExists(definition_path_+"/record_definition.json"))
+        throw invalid_argument ("jASTERIX called without asterix record definition");
+
     try // create framing definition and parser
     {
         ifstream ifs(definition_path_+"/framings/"+framing_+".json");
         framing_definition_ = json::parse(ifs);
 
-        frame_parser_.reset(new FrameParser(framing_definition_));
+        ifstream ifs2(definition_path_+"/record_definition.json");
+        record_definition_ = json::parse(ifs2);
+
+        frame_parser_.reset(new FrameParser(framing_definition_, record_definition_));
     }
     catch (json::exception& e)
     {
@@ -70,17 +76,39 @@ jASTERIX::~jASTERIX()
         file_.close();
 }
 
-void jASTERIX::scopeFrames()
+size_t jASTERIX::scopeFrames()
 {
     assert (frame_parser_);
     assert (file_.is_open());
+    assert (json_data_ == nullptr);
 
     //cout << "jASTERIX scoping frames" << endl;
 
-    frame_parser_->scopeFrames(file_.data(), 0, file_size_, debug_);
+    frame_parser_->scopeFrames(file_.data(), 0, file_size_, json_data_, debug_);
 
-//    if (debug_)
-//        cout << "jASTERIX frame scoping JSON result:\n '" << frame_parser_->data().dump(4) << "'";
+    if (json_data_.find("frames") == json_data_.end())
+        throw runtime_error ("jASTERIX scoped frames information contains no frames");
+
+    if (!json_data_.at("frames").is_array())
+        throw runtime_error ("jASTERIX scoped frames information is not array");
+
+    cout << "jASTERIX frame scoping JSON result contains " << json_data_.at("frames").size() << " frames" << endl;
+
+    return json_data_.at("frames").size();
+}
+
+void jASTERIX::decodeFrames()
+{
+    assert (frame_parser_);
+    assert (file_.is_open());
+    assert (json_data_ != nullptr);
+
+    frame_parser_->decodeFrames(file_.data(), json_data_, debug_);
+}
+
+void jASTERIX::printData()
+{
+    cout << "jASTERIX data: '" << json_data_.dump(4) << "'" << endl;
 }
 
 }

@@ -17,7 +17,10 @@ public:
              bool debug);
     virtual ~jASTERIX();
 
-    void scopeFrames();
+    size_t scopeFrames();
+    void decodeFrames();
+
+    void printData();
 
 private:
     std::string filename_;
@@ -26,10 +29,13 @@ private:
     bool debug_ {false};
 
     nlohmann::json framing_definition_;
+    nlohmann::json record_definition_;
     std::unique_ptr<FrameParser> frame_parser_;
 
     size_t file_size_{0};
     boost::iostreams::mapped_file_source file_;
+
+    nlohmann::json json_data_;
 };
 }
 

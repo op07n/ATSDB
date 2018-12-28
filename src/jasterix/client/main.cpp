@@ -66,7 +66,7 @@ int main (int argc, char **argv)
     {
         cerr << "jASTERIX: unable to parse command line parameters: " << endl
                   << e.what() << endl;
-        return 0;
+        return -1;
     }
 
     // check if basic configuration works
@@ -79,15 +79,33 @@ int main (int argc, char **argv)
         jASTERIX::jASTERIX asterix (filename, definition_path, framing, debug);
         boost::posix_time::ptime  start_time = boost::posix_time::microsec_clock::local_time();
 
-        asterix.scopeFrames();
+        size_t num_frames = asterix.scopeFrames();
 
-        boost::posix_time::ptime stop_time = boost::posix_time::microsec_clock::local_time();
-        boost::posix_time::time_duration diff = stop_time - start_time;
+        boost::posix_time::time_duration diff = boost::posix_time::microsec_clock::local_time() - start_time;
 
-        string time_str = to_string(diff.hours())+"h "+to_string(diff.minutes())+"m "+to_string(diff.seconds())+"s";
+        string time_str = to_string(diff.hours())+"h "+to_string(diff.minutes())+"m "+to_string(diff.seconds())+"s "+
+                to_string(diff.total_milliseconds())+"ms";
+
+        double seconds = diff.total_seconds()+diff.total_milliseconds()/1000.0;
 
         //if (debug)
-            cout << "jASTERIX: scoped frames in " << time_str << endl;
+        cout << "jASTERIX: scoped " << num_frames << " frames in " << time_str << " "
+             << num_frames/seconds << " fr/s" << endl;
+
+        asterix.decodeFrames();
+
+        diff = boost::posix_time::microsec_clock::local_time() - start_time;
+
+        time_str = to_string(diff.hours())+"h "+to_string(diff.minutes())+"m "+to_string(diff.seconds())+"s "+
+                to_string(diff.total_milliseconds())+"ms";
+
+        seconds = diff.total_seconds()+diff.total_milliseconds()/1000.0;
+
+        //if (debug)
+        cout << "jASTERIX: decoded " << num_frames << " frames in " << time_str << " "
+             << num_frames/seconds << " fr/s" << endl;
+
+        asterix.printData();
     }
     catch (exception &ex)
     {

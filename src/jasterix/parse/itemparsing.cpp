@@ -11,11 +11,11 @@ namespace jASTERIX
 {
 
 size_t parseItem (const nlohmann::json& item_definition, const char* data, size_t index, size_t size,
-                  nlohmann::json& target, bool debug)
+                  size_t current_parsed_bytes, nlohmann::json& target, bool debug)
 {
     assert (data);
     assert (size);
-    assert (index < size);
+    //assert (index < size);
 
     if (item_definition.find("name") == item_definition.end())
         throw runtime_error ("item parsing without JSON name definition");
@@ -62,8 +62,16 @@ size_t parseItem (const nlohmann::json& item_definition, const char* data, size_
 
             size_t data_uint {0};
 
-            for (int cnt = length-1; cnt >= 0; --cnt)
-                data_uint = (data_uint << 8) + *reinterpret_cast<const unsigned char*> (&current_data[cnt]);
+            if (item_definition.find("reverse") != item_definition.end() && item_definition.at("reverse") == true)
+            {
+                for (size_t cnt = 0; cnt < length; ++cnt)
+                    data_uint = (data_uint << 8) + *reinterpret_cast<const unsigned char*> (&current_data[cnt]);
+            }
+            else
+            {
+                for (int cnt = length-1; cnt >= 0; --cnt)
+                    data_uint = (data_uint << 8) + *reinterpret_cast<const unsigned char*> (&current_data[cnt]);
+            }
 
             if (debug)
                 cout << "fixed bytes item '"+name+"' index " << index << " length " << length
@@ -100,6 +108,13 @@ size_t parseItem (const nlohmann::json& item_definition, const char* data, size_
             throw runtime_error ("dynamic bytes item '"+name+"' parsing without given length");
 
         size_t length = target.at(length_variable_name);
+
+        if (item_definition.find("substract_previous") != item_definition.end()
+                && item_definition.at("substract_previous") == true)
+        {
+            length -= current_parsed_bytes;
+            assert (length - current_parsed_bytes >= 0);
+        }
 
         if (debug)
             cout << "dynamic bytes item '"+name+"' index " << index << " length " << length << endl;
