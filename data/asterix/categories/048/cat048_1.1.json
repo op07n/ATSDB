@@ -1,5 +1,11 @@
 {
-  "name": "asterix_record",
+  "name": "record",
+  "type": "compound",
+  "field_specification" : {
+       "name" : "fspec",
+       "type": "extendable_bits",
+       "data_type" : "bitfield"
+    },
   "items" : [
     {
        "name" : "category",

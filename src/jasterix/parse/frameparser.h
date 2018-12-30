@@ -25,6 +25,7 @@ private:
     // return number of parsed bytes
     size_t parseHeader (const char* data, size_t index, size_t size, nlohmann::json& target, bool debug);
     size_t parseFrames (const char* data, size_t index, size_t size, nlohmann::json& target, bool debug);
+    size_t decodeFrame (const char* data, nlohmann::json& json_data, nlohmann::json& json_frame, bool debug);
 };
 
 }

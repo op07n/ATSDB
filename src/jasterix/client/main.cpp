@@ -117,7 +117,8 @@ int main (int argc, char **argv)
             loginf << "jASTERIX: decoded " << num_frames << " frames in " << time_str << " "
                  << num_frames/seconds << " fr/s";
 
-        asterix.printData();
+        if (debug)
+            asterix.printData();
     }
     catch (exception &ex)
     {
