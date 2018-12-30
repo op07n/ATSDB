@@ -71,7 +71,6 @@ message("  LibArchive_LIBRARIES: ${LibArchive_LIBRARIES}")
 #message("  JSONCPP_INCLUDE_DIR: ${JSONCPP_INCLUDE_DIR}")
 #message("  JSONCPP_LIBRARY: ${JSONCPP_LIBRARY}")
 
-
 add_library(atsdb "")
 
 message("Install path: ${CMAKE_INSTALL_PREFIX}")

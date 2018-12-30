@@ -3,13 +3,17 @@
 
 #include <iostream>
 
+#include <tbb/tbb.h>
+
 using namespace std;
 using namespace nlohmann;
 
 namespace jASTERIX {
 
-FrameParser::FrameParser(const json& framing_definition, const json& record_definition)
-    : framing_definition_(framing_definition), record_definition_(record_definition)
+FrameParser::FrameParser(const json& framing_definition, const json& record_definition,
+                         const std::map<unsigned int, nlohmann::json>& asterix_category_definitions)
+    : framing_definition_(framing_definition), data_block_definition_(record_definition),
+      asterix_category_definitions_(asterix_category_definitions)
 {
     //cout << "constructing frame parser" << endl;
 
@@ -96,49 +100,68 @@ size_t FrameParser::parseFrames (const char* data, size_t index, size_t size, js
 
 void FrameParser::decodeFrames (const char* data, json& json_data, bool debug)
 {
-//    {
-//       "cnt": 9998,
-//       "content": {
-//         "index": 1092039,
-//         "length": 41
-//       },
-//       "frame_length": 41,
-//       "frame_relative_time_ms": 27128
-//    }
+    size_t num_frames = json_data.at("frames").size();
 
-    size_t index;
-    size_t length;
-
-    size_t parsed_bytes {0};
-
-    size_t record_cnt {0};
-    size_t record_all_cnt {0};
-
-
-    for (json& frame_it : json_data.at("frames"))
+//    for (json& frame_it : json_data.at("frames"))
+    tbb::parallel_for( size_t(0), num_frames, [&]( size_t cnt )
     {
+        json& frame_it = json_data.at("frames").at(cnt);
+
         if (frame_it.find("content") == frame_it.end())
             throw runtime_error("frame parser scoped frames does not contain correct content");
 
         json& frame_content = frame_it.at("content");
 
-        index = frame_content.at("index");
-        length = frame_content.at("length");
-        parsed_bytes = 0;
-        record_cnt = 0;
+        size_t index {frame_content.at("index")};
+        size_t length {frame_content.at("length")};
+        size_t parsed_bytes {0};
 
         if (debug)
             cout << "frame parser decoding frame at index " << index << " length " << length << endl;
 
-        for (auto& r_item : record_definition_.at("items"))
+        std::string data_block_name = data_block_definition_.at("name");
+
+        for (auto& r_item : data_block_definition_.at("items"))
         {
             parsed_bytes += parseItem(r_item, data, index+parsed_bytes, length, parsed_bytes,
-                                      frame_content["record"], debug);
-            //target["frames"][frames_cnt]["cnt"] = frames_cnt;
-            ++record_cnt;
-            ++record_all_cnt;
+                                      frame_content[data_block_name], debug);
+            //++record_cnt;
         }
-    }
+
+//    {
+//        "cnt": 0,
+//        "content": {
+//            "index": 134,
+//            "length": 56,
+//            "record": {
+//                "category": 1,
+//                "content": {
+//                    "index": 137,
+//                    "length": 42
+//                },
+//                "length": 45
+//            }
+//        },
+//        "frame_length": 56,
+//        "frame_relative_time_ms": 2117
+//    }
+
+        json& record = frame_content.at(data_block_name);
+
+        if (record.find ("category") == record.end())
+            throw runtime_error("frame parser record does not contain category information");
+
+        if (record.find ("content") == record.end())
+            throw runtime_error("frame parser record does not contain content information");
+
+        json& record_content = record.at("content");
+
+        if (record_content.find ("index") == record_content.end())
+            throw runtime_error("frame parser record content does not contain index information");
+
+        if (record_content.find ("length") == record_content.end())
+            throw runtime_error("frame parser record content does not contain length information");
+    });
 
 }
 

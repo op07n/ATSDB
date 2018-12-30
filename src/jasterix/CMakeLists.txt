@@ -3,6 +3,8 @@ include_directories (
     "${CMAKE_CURRENT_LIST_DIR}"
     )
 
+find_package(TBB REQUIRED)
+
 add_library(jasterix "")
 
 target_sources(jasterix
@@ -15,3 +17,8 @@ target_sources(jasterix
 include("${CMAKE_CURRENT_LIST_DIR}/parse/CMakeLists.txt")
 include("${CMAKE_CURRENT_LIST_DIR}/utils/CMakeLists.txt")
 include("${CMAKE_CURRENT_LIST_DIR}/client/CMakeLists.txt")
+
+
+target_link_libraries ( jasterix
+    ${TBB_LIBRARIES}
+    )

@@ -89,8 +89,8 @@ int main (int argc, char **argv)
         double seconds = diff.total_seconds()+diff.total_milliseconds()/1000.0;
 
         //if (debug)
-        cout << "jASTERIX: scoped " << num_frames << " frames in " << time_str << " "
-             << num_frames/seconds << " fr/s" << endl;
+            cout << "jASTERIX: scoped " << num_frames << " frames in " << time_str << " "
+                 << num_frames/seconds << " fr/s" << endl;
 
         asterix.decodeFrames();
 
@@ -102,8 +102,8 @@ int main (int argc, char **argv)
         seconds = diff.total_seconds()+diff.total_milliseconds()/1000.0;
 
         //if (debug)
-        cout << "jASTERIX: decoded " << num_frames << " frames in " << time_str << " "
-             << num_frames/seconds << " fr/s" << endl;
+            cout << "jASTERIX: decoded " << num_frames << " frames in " << time_str << " "
+                 << num_frames/seconds << " fr/s" << endl;
 
         asterix.printData();
     }

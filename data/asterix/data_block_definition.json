@@ -1,5 +1,5 @@
 {
-  "name": "asterix_record",
+  "name": "data_block",
   "items" : [
     {
        "name" : "category",
@@ -8,17 +8,17 @@
        "data_type" : "uint"
     },
     {
-       "name" : "record_length",
+       "name" : "length",
        "type": "fixed_bytes",
        "length" : 2,
        "reverse" : true,
        "data_type" : "uint"
     },
     {
-       "name" : "record_content",
+       "name" : "content",
        "type": "dynamic_bytes",
        "substract_previous" : true,
-       "length_variable": "record_length"
+       "length_variable": "length"
     }
   ]
 }

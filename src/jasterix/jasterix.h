@@ -30,6 +30,8 @@ private:
 
     nlohmann::json framing_definition_;
     nlohmann::json record_definition_;
+    nlohmann::json asterix_list_definition_;
+    std::map<unsigned int, nlohmann::json> asterix_category_definitions_;
     std::unique_ptr<FrameParser> frame_parser_;
 
     size_t file_size_{0};

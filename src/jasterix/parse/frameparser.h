@@ -8,14 +8,16 @@ namespace jASTERIX {
 class FrameParser
 {
 public:
-    FrameParser(const nlohmann::json& framing_definition, const nlohmann::json& record_definition);
+    FrameParser(const nlohmann::json& framing_definition, const nlohmann::json& record_definition,
+                const std::map<unsigned int, nlohmann::json>& asterix_category_definitions);
 
     void scopeFrames (const char* data, size_t index, size_t size, nlohmann::json& json_data, bool debug);
     void decodeFrames (const char* data, nlohmann::json& json_data, bool debug);
 
 private:
     const nlohmann::json framing_definition_;
-    const nlohmann::json record_definition_;
+    const nlohmann::json data_block_definition_;
+    const std::map<unsigned int, nlohmann::json> asterix_category_definitions_;
 
     nlohmann::json header_items_;
     nlohmann::json frame_items_;
