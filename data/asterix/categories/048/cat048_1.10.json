@@ -1,0 +1,102 @@
+{
+"name":"record",
+"type":"compound",
+"field_specification":
+{
+    "name":"fspec",
+    "type":"extendable_bits",
+    "data_type":"bitfield"
+},
+"items":
+[
+    {
+        "name":"010",
+        "type": "optional_item",
+        "optional_bitfield_name":"fspec",
+        "optional_bitfield_index":0,
+        "data_fields":
+        [
+            {
+                "name":"sac",
+                "type":"fixed_bytes",
+                "length":1,
+                "data_type":"uint"
+            },
+            {
+                "name":"sic",
+                "type":"fixed_bytes",
+                "length":1,
+                "data_type":"uint"
+            }
+        ]
+    },
+    {
+        "name":"140",
+        "type": "optional_item",
+        "optional_bitfield_name":"fspec",
+        "optional_bitfield_index":1,
+        "data_fields":
+        [
+            {
+                "name":"time-of-day",
+                "type":"fixed_bytes",
+                "reverse_bytes" : true,
+                "reverse_bits" : true,
+                "length":3,
+                "data_type":"uint"
+            }
+        ]
+    },
+    {
+        "name":"020",
+        "type": "optional_item",
+        "optional_bitfield_name":"fspec",
+        "optional_bitfield_index":2,
+        "data_fields":
+        [
+            {
+                "name":"target report descriptor",
+                "type":"fixed_byte_bitfield",
+                "items":[
+                    {
+                        "name":"typ",
+                        "type":"fixed_bits",
+                        "start_bit": 5,
+                        "length": 3
+                    },
+                    {
+                        "name":"sim",
+                        "type":"fixed_bits",
+                        "start_bit": 4,
+                        "length":1
+                    },
+                    {
+                        "name":"rdb",
+                        "type":"fixed_bits",
+                        "start_bit": 3,
+                        "length":1
+                    },
+                    {
+                        "name":"spi",
+                        "type":"fixed_bits",
+                        "start_bit": 2,
+                        "length":1
+                    },
+                    {
+                        "name":"rab",
+                        "type":"fixed_bits",
+                        "start_bit": 1,
+                        "length":1
+                    },
+                    {
+                        "name":"extent_present",
+                        "type":"fixed_bits",
+                        "start_bit": 0,
+                        "length":1
+                    }
+                ]
+            }
+        ]
+    }
+]
+}

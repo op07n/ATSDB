@@ -66,7 +66,8 @@ size_t FrameParser::parseHeader (const char* data, size_t index, size_t size, js
 
     for (auto& j_item : header_items_)
     {
-        parsed_bytes += parseItem(j_item, data, index+parsed_bytes, size, parsed_bytes, target, debug);
+        parsed_bytes += parseItem(j_item, data, index+parsed_bytes, size, parsed_bytes, target, target, debug);
+        // HACK target and parent same
     }
 
     return parsed_bytes;
@@ -88,7 +89,7 @@ size_t FrameParser::parseFrames (const char* data, size_t index, size_t size, js
         for (auto& j_item : frame_items_)
         {
             parsed_bytes += parseItem(j_item, data, index+parsed_bytes, size, current_parsed_bytes,
-                                      target["frames"][frames_cnt], debug);
+                                      target["frames"][frames_cnt], target, debug);
             target["frames"][frames_cnt]["cnt"] = frames_cnt;
         }
         ++frames_cnt;
@@ -137,7 +138,7 @@ size_t FrameParser::decodeFrame (const char* data, nlohmann::json& json_data, nl
     for (auto& r_item : data_block_definition_.at("items"))
     {
         parsed_bytes += parseItem(r_item, data, index+parsed_bytes, length, parsed_bytes,
-                                  frame_content[data_block_name], debug);
+                                  frame_content[data_block_name], frame_content, debug);
         //++record_cnt;
     }
 
@@ -194,7 +195,7 @@ size_t FrameParser::decodeFrame (const char* data, nlohmann::json& json_data, nl
         std::string record_content_name = asterix_category_definition.at("name");
 
         parsed_bytes = parseItem(asterix_category_definition, data, record_index, record_length,
-                                 parsed_bytes, record_content[record_content_name], debug);
+                                 parsed_bytes, record_content[record_content_name], record_content, debug);
     }
     else if (debug)
         loginf << "frame parser decoding record with cat " << cat << " index " << record_index

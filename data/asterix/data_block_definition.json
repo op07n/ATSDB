@@ -11,7 +11,7 @@
        "name" : "length",
        "type": "fixed_bytes",
        "length" : 2,
-       "reverse" : true,
+       "reverse_bytes" : true,
        "data_type" : "uint"
     },
     {
