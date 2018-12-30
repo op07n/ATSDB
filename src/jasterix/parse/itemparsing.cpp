@@ -1,4 +1,5 @@
 #include "itemparsing.h"
+#include "jasterix_logger.h"
 
 #include <iostream>
 #include <cassert>
@@ -15,7 +16,6 @@ size_t parseItem (const nlohmann::json& item_definition, const char* data, size_
 {
     assert (data);
     assert (size);
-    //assert (index < size);
 
     if (item_definition.find("name") == item_definition.end())
         throw runtime_error ("item parsing without JSON name definition");
@@ -47,8 +47,8 @@ size_t parseItem (const nlohmann::json& item_definition, const char* data, size_
             std::string data_str (reinterpret_cast<char const*>(current_data), length-1); // -1 to account for end 0
 
             if (debug)
-                cout << "fixed bytes item '"+name+"' index " << index << " length " << length
-                     << " data type " << data_type << " value '" << data_str << "'" << endl;
+                loginf << "fixed bytes item '"+name+"' index " << index << " length " << length
+                     << " data type " << data_type << " value '" << data_str << "'";
 
             assert (target.find(name) == target.end());
             target[name] = data_str;
@@ -74,8 +74,8 @@ size_t parseItem (const nlohmann::json& item_definition, const char* data, size_
             }
 
             if (debug)
-                cout << "fixed bytes item '"+name+"' index " << index << " length " << length
-                     << " data type " << data_type << " value '" << data_uint << "'" << endl;
+                loginf << "fixed bytes item '"+name+"' index " << index << " length " << length
+                     << " data type " << data_type << " value '" << data_uint << "'";
 
             assert (target.find(name) == target.end());
             target[name] = data_uint;
@@ -93,7 +93,7 @@ size_t parseItem (const nlohmann::json& item_definition, const char* data, size_
         unsigned int length = item_definition.at("length");
 
         if (debug)
-            cout << "skip bytes item '"+name+"' index " << index << " length " << length << endl;
+            loginf << "skip bytes item '"+name+"' index " << index << " length " << length;
 
         return length;
     }
@@ -117,7 +117,7 @@ size_t parseItem (const nlohmann::json& item_definition, const char* data, size_
         }
 
         if (debug)
-            cout << "dynamic bytes item '"+name+"' index " << index << " length " << length << endl;
+            loginf << "dynamic bytes item '"+name+"' index " << index << " length " << length;
 
         assert (target.find(name) == target.end());
         target[name]["index"] = index;

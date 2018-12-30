@@ -7,12 +7,17 @@
 #include <cstdlib>
 
 #include "jasterix.h"
+#include "jasterix_logger.h"
 
 #include <stdio.h>
 #include <execinfo.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+#include "log4cpp/OstreamAppender.hh"
+#include "log4cpp/Layout.hh"
+#include "log4cpp/SimpleLayout.hh"
 
 namespace po = boost::program_options;
 
@@ -34,6 +39,14 @@ using namespace std;
 int main (int argc, char **argv)
 {
     signal(SIGSEGV, handler);   // install our handler
+
+    // setup logging
+    log4cpp::Appender *console_appender_ = new log4cpp::OstreamAppender("console", &std::cout);
+    console_appender_->setLayout(new log4cpp::SimpleLayout());
+
+    log4cpp::Category& root = log4cpp::Category::getRoot();
+    root.setPriority(log4cpp::Priority::INFO);
+    root.addAppender(console_appender_);
 
     std::string filename;
     std::string framing {"netto"};
@@ -58,14 +71,13 @@ int main (int argc, char **argv)
 
         if (vm.count("help"))
         {
-            std::cout << desc << "\n";
+            loginf << desc;
             return 1;
         }
     }
     catch (exception& e)
     {
-        cerr << "jASTERIX: unable to parse command line parameters: " << endl
-                  << e.what() << endl;
+        logerr << "jASTERIX: unable to parse command line parameters: \n" << e.what();
         return -1;
     }
 
@@ -73,8 +85,8 @@ int main (int argc, char **argv)
     try
     {
         if (debug)
-            cout << "jASTERIX: startup with filename '" << filename << "' framing '" << framing
-                 << "' definition_path '" << definition_path << "' debug " << debug << endl;
+            loginf << "jASTERIX: startup with filename '" << filename << "' framing '" << framing
+                   << "' definition_path '" << definition_path << "' debug " << debug;
 
         jASTERIX::jASTERIX asterix (filename, definition_path, framing, debug);
         boost::posix_time::ptime  start_time = boost::posix_time::microsec_clock::local_time();
@@ -89,8 +101,8 @@ int main (int argc, char **argv)
         double seconds = diff.total_seconds()+diff.total_milliseconds()/1000.0;
 
         //if (debug)
-            cout << "jASTERIX: scoped " << num_frames << " frames in " << time_str << " "
-                 << num_frames/seconds << " fr/s" << endl;
+            loginf << "jASTERIX: scoped " << num_frames << " frames in " << time_str << " "
+                 << num_frames/seconds << " fr/s";
 
         asterix.decodeFrames();
 
@@ -102,14 +114,14 @@ int main (int argc, char **argv)
         seconds = diff.total_seconds()+diff.total_milliseconds()/1000.0;
 
         //if (debug)
-            cout << "jASTERIX: decoded " << num_frames << " frames in " << time_str << " "
-                 << num_frames/seconds << " fr/s" << endl;
+            loginf << "jASTERIX: decoded " << num_frames << " frames in " << time_str << " "
+                 << num_frames/seconds << " fr/s";
 
         asterix.printData();
     }
     catch (exception &ex)
     {
-        cerr  << "jASTERIX: caught exception: " << ex.what() << endl;
+        logerr << "jASTERIX: caught exception: " << ex.what();
 
         //assert (false);
 
@@ -117,14 +129,14 @@ int main (int argc, char **argv)
     }
     catch(...)
     {
-        cerr  << "jASTERIX: caught exception" << endl;
+        logerr << "jASTERIX: caught exception";
 
         //assert (false);
 
         return -1;
     }
 
-    cout << "jASTERIX: shutdown" << endl;
+    loginf << "jASTERIX: shutdown";
     //std::cout.flush();
 
     return 0;

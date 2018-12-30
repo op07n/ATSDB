@@ -1,5 +1,6 @@
 #include "jasterix.h"
 #include "jasterix_files.h"
+#include "jasterix_logger.h"
 #include "frameparser.h"
 
 #include <exception>
@@ -17,8 +18,6 @@ jASTERIX::jASTERIX(const std::string& filename, const std::string& definition_pa
                    bool debug)
     : filename_(filename), definition_path_(definition_path), framing_(framing), debug_(debug)
 {
-    //cout << "constructing jASTERIX" << endl;
-
     // check and open file
     if (!fileExists(filename_))
         throw invalid_argument ("jASTERIX called with non-existing file '"+filename_+"'");
@@ -29,7 +28,7 @@ jASTERIX::jASTERIX(const std::string& filename, const std::string& definition_pa
         throw invalid_argument ("jASTERIX called with empty file '"+filename_+"'");
 
     if (debug_)
-        cout << "jASTERIX: file " << filename_ << " size " << file_size_ << endl;
+        loginf << "jASTERIX: file " << filename_ << " size " << file_size_;
 
     file_.open(filename_, file_size_);
 
@@ -107,12 +106,12 @@ jASTERIX::jASTERIX(const std::string& filename, const std::string& definition_pa
                 throw invalid_argument ("jASTERIX called with wrong asterix category '"+cat_str+"' in list definition");
 
             if (debug)
-                cout << "jASTERIX found asterix category " << cat << " definition in '" << file_str << "'" << endl;
+                loginf << "jASTERIX found asterix category " << cat << " definition in '" << file_str << "'";
 
             try
             {
                 if (debug)
-                   cout << "jASTERIX loading file from path '"+definition_path_+"/categories/"+file_str << "'" << endl;
+                   loginf << "jASTERIX loading file from path '"+definition_path_+"/categories/"+file_str << "'";
 
                 asterix_category_definitions_[cat] =
                         json::parse(ifstream(definition_path_+"/categories/"+file_str));
@@ -154,7 +153,8 @@ size_t jASTERIX::scopeFrames()
     if (!json_data_.at("frames").is_array())
         throw runtime_error ("jASTERIX scoped frames information is not array");
 
-    cout << "jASTERIX frame scoping JSON result contains " << json_data_.at("frames").size() << " frames" << endl;
+    if (debug_)
+        loginf << "jASTERIX frame scoping JSON result contains " << json_data_.at("frames").size() << " frames";
 
     return json_data_.at("frames").size();
 }
@@ -170,7 +170,7 @@ void jASTERIX::decodeFrames()
 
 void jASTERIX::printData()
 {
-    cout << "jASTERIX data: '" << json_data_.dump(4) << "'" << endl;
+    loginf << "jASTERIX data: '" << json_data_.dump(4) << "'";
 }
 
 }

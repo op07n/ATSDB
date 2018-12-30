@@ -21,4 +21,5 @@ include("${CMAKE_CURRENT_LIST_DIR}/client/CMakeLists.txt")
 
 target_link_libraries ( jasterix
     ${TBB_LIBRARIES}
+    ${LOG4CPP_LIBRARIES}
     )
