@@ -196,6 +196,10 @@ size_t FrameParser::decodeFrame (const char* data, nlohmann::json& json_data, nl
 
         parsed_bytes = parseItem(asterix_category_definition, data, record_index, record_length,
                                  parsed_bytes, record_content[record_content_name], record_content, debug);
+
+        if (debug)
+            loginf << "frame parser decoding record with cat " << cat << " index " << record_index
+                     << ": " << record_content.at(record_content_name).dump(4) << "'";
     }
     else if (debug)
         loginf << "frame parser decoding record with cat " << cat << " index " << record_index

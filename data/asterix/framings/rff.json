@@ -29,6 +29,7 @@
     {
        "name" : "frame_length",
        "type": "fixed_bytes",
+       "reverse_bytes" : true,
        "length" : 2,
        "data_type" : "uint"
     },
