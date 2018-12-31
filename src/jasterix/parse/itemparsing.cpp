@@ -5,6 +5,7 @@
 #include <cassert>
 #include <string>
 #include <exception>
+#include <iomanip>
 
 using namespace std;
 using namespace nlohmann;
@@ -78,6 +79,11 @@ size_t parseItem (const nlohmann::json& item_definition, const char* data, size_
                 {
                     tmp = *reinterpret_cast<const unsigned char*> (&current_data[cnt]);
 
+                    if (debug)
+                        loginf << "fixed bytes item '"+name+"' cnt " << cnt << " byte "
+                               << std::hex << static_cast<unsigned int> (tmp) << " reverse bytes true bits "
+                               << reverse_bits << " data " << data_uint;
+
                     if (reverse_bits)
                         reverseBits(tmp);
 
@@ -89,6 +95,11 @@ size_t parseItem (const nlohmann::json& item_definition, const char* data, size_
                 for (int cnt = length-1; cnt >= 0; --cnt)
                 {
                     tmp = *reinterpret_cast<const unsigned char*> (&current_data[cnt]);
+
+                    if (debug)
+                        loginf << "fixed bytes item '"+name+"' cnt " << cnt << " byte "
+                               << std::hex << static_cast<unsigned int> (tmp) << " reverse bytes false bits "
+                               << reverse_bits << " data " << data_uint;
 
                     if (reverse_bits)
                         reverseBits(tmp);
@@ -199,9 +210,10 @@ size_t parseItem (const nlohmann::json& item_definition, const char* data, size_
             item_name = data_item_it.at("name");
 
             if (debug)
-                loginf << "parsing compound item '" << name << "' data item '" << item_name << "'";
+                loginf << "parsing compound item '" << name << "' data item '" << item_name << "' index "
+                       << index+parsed_bytes;
 
-            parsed_bytes = parseItem(data_item_it, data, index+parsed_bytes, size,
+            parsed_bytes += parseItem(data_item_it, data, index+parsed_bytes, size,
                                      parsed_bytes, target[item_name], target, debug);
         }
 
@@ -257,18 +269,41 @@ size_t parseItem (const nlohmann::json& item_definition, const char* data, size_
         else
             throw runtime_error ("extentable bits item '"+name+"' parsing with unknown data type '"+data_type+"'");
     }
-    else if (type == "fixed_byte_bitfield")
+    else if (type == "one_byte_bitfield")
     {
         if (debug)
-            loginf << "parsing fixed byte bitfield item '" << name << "'";
+            loginf << "parsing one byte bitfield item '" << name << "'";
+
+        if (item_definition.find("optional") != item_definition.end() && item_definition.at("optional") == true)
+        {
+            if (item_definition.find("optional_variable_name") == item_definition.end())
+                throw runtime_error ("parsing one byte bitfield item '"+name+"' optional but no variable given");
+
+            std::string optional_variable_name = item_definition.at("optional_variable_name");
+
+            if (item_definition.find("optional_variable_value") == item_definition.end())
+                throw runtime_error ("parsing one byte bitfield item '"+name
+                                     +"' optional but no variable value given");
+
+            const json& optional_variable_value = item_definition.at("optional_variable_value");
+
+            if (!variableHasValue(parent, optional_variable_name, optional_variable_value))
+            {
+                if (debug)
+                    loginf << "parsing one byte bitfield item '" << name << "' skipped since variable '"
+                           << optional_variable_name << "' does not exist in '" << parent.dump(4) << "'";
+
+                return 0; // no parse
+            }
+        }
 
         if (item_definition.find("items") == item_definition.end())
-            throw runtime_error ("parsing fixed byte bitfield item '"+name+"' without sub-items");
+            throw runtime_error ("parsing one byte bitfield item '"+name+"' without sub-items");
 
         const json& items = item_definition.at("items");
 
         if (!items.is_array())
-            throw runtime_error ("parsing fixed byte bitfield item '"+name+"' sub-items specification is not an array");
+            throw runtime_error ("parsing one byte bitfield item '"+name+"' sub-items specification is not an array");
 
         std::string subitem_name;
 
@@ -277,7 +312,7 @@ size_t parseItem (const nlohmann::json& item_definition, const char* data, size_
             subitem_name = sub_item_it.at("name");
 
             if (debug)
-                loginf << "parsing fixed byte bitfield item '" << name << "' item '" << subitem_name << "'";
+                loginf << "parsing one byte bitfield item '" << name << "' item '" << subitem_name << "'";
 
             parseItem(sub_item_it, data, index, size, 0, target[subitem_name], target, debug);
         }
@@ -403,5 +438,40 @@ unsigned char reverseBits(unsigned char b)
    return b;
 }
 
+bool variableHasValue (const nlohmann::json& data, const std::string& variable_name,
+                       const nlohmann::json& variable_value)
+{
+    const nlohmann::json* val_ptr = &data;
+    std::vector <std::string> sub_keys = split(variable_name, '.');
+    for (const std::string& sub_key : sub_keys)
+    {
+        if (val_ptr->find (sub_key) != val_ptr->end())
+        {
+            if (sub_key == sub_keys.back()) // last found
+            {
+                val_ptr = &val_ptr->at(sub_key);
+                break;
+            }
+
+            if (val_ptr->at(sub_key).is_object()) // not last, step in
+                val_ptr = &val_ptr->at(sub_key);
+            else // not last key, and not object
+            {
+                val_ptr = nullptr;
+                break;
+            }
+        }
+        else // not found
+        {
+            val_ptr = nullptr;
+            break;
+        }
+    }
+
+    if (val_ptr == nullptr || *val_ptr == nullptr) // not found
+        return false;
+    else
+        return *val_ptr == variable_value;
+}
 
 }

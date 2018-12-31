@@ -38,10 +38,9 @@
         "data_fields":
         [
             {
-                "name":"time-of-day",
+                "name":"time_of_day",
                 "type":"fixed_bytes",
                 "reverse_bytes" : true,
-                "reverse_bits" : true,
                 "length":3,
                 "data_type":"uint"
             }
@@ -56,7 +55,7 @@
         [
             {
                 "name":"target report descriptor",
-                "type":"fixed_byte_bitfield",
+                "type":"one_byte_bitfield",
                 "items":[
                     {
                         "name":"typ",
@@ -95,8 +94,68 @@
                         "length":1
                     }
                 ]
+            },
+            {
+                "name":"target report descriptor first extend",
+                "type":"one_byte_bitfield",
+                "optional":true,
+                "optional_variable_name":"020.extent_present",
+                "optional_variable_value":1,
+                "items":[
+                    {
+                        "name":"tst",
+                        "type":"fixed_bits",
+                        "start_bit": 7,
+                        "length": 1
+                    },
+                    {
+                        "name":"me",
+                        "type":"fixed_bits",
+                        "start_bit": 4,
+                        "length":1
+                    },
+                    {
+                        "name":"mi",
+                        "type":"fixed_bits",
+                        "start_bit": 3,
+                        "length":1
+                    },
+                    {
+                        "name":"foe/fri",
+                        "type":"fixed_bits",
+                        "start_bit": 1,
+                        "length":2
+                    },
+                    {
+                        "name":"extent_present",
+                        "type":"fixed_bits",
+                        "start_bit": 0,
+                        "length":1
+                    }
+                ]
             }
         ]
-    }
+    },
+    {
+        "name":"040",
+        "type": "optional_item",
+        "optional_bitfield_name":"fspec",
+        "optional_bitfield_index":3,
+        "data_fields":
+        [
+            {
+                "name":"rho",
+                "type":"fixed_bytes",
+                "length":2,
+                "data_type":"uint"
+            },
+            {
+                "name":"theta",
+                "type":"fixed_bytes",
+                "length":2,
+                "data_type":"uint"
+            }
+        ]
+    }    
 ]
 }
