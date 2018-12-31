@@ -38,6 +38,8 @@ using namespace std;
 
 int main (int argc, char **argv)
 {
+    static_assert (sizeof(size_t) >= 8, "code requires size_t with at least 8 bytes");
+
     signal(SIGSEGV, handler);   // install our handler
 
     // setup logging
