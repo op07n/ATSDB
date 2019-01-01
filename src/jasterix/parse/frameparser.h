@@ -12,7 +12,8 @@ public:
                 const std::map<unsigned int, nlohmann::json>& asterix_category_definitions);
 
     void scopeFrames (const char* data, size_t index, size_t size, nlohmann::json& json_data, bool debug);
-    void decodeFrames (const char* data, nlohmann::json& json_data, bool debug);
+    // returns number of decoded records
+    size_t decodeFrames (const char* data, nlohmann::json& json_data, bool debug);
 
 private:
     const nlohmann::json framing_definition_;
@@ -25,6 +26,7 @@ private:
     // return number of parsed bytes
     size_t parseHeader (const char* data, size_t index, size_t size, nlohmann::json& target, bool debug);
     size_t parseFrames (const char* data, size_t index, size_t size, nlohmann::json& target, bool debug);
+    // returns number of records
     size_t decodeFrame (const char* data, nlohmann::json& json_data, nlohmann::json& json_frame, bool debug);
 };
 

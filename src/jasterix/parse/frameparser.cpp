@@ -98,25 +98,37 @@ size_t FrameParser::parseFrames (const char* data, size_t index, size_t size, js
     return parsed_bytes;
 }
 
-void FrameParser::decodeFrames (const char* data, json& json_data, bool debug)
+size_t FrameParser::decodeFrames (const char* data, json& json_data, bool debug)
 {
     size_t num_frames = json_data.at("frames").size();
+
+    size_t num_records_sum {0};
 
     if (debug) // switch to single thread in debug
     {
         for (json& frame_it : json_data.at("frames"))
         {
-            decodeFrame (data, json_data, frame_it, debug);
+            num_records_sum += decodeFrame (data, json_data, frame_it, debug);
         }
     }
     else
     {
+        std::vector<size_t> num_records;
+        num_records.resize(num_frames, 0);
+
         tbb::parallel_for( size_t(0), num_frames, [&]( size_t cnt )
         {
-            decodeFrame (data, json_data, json_data.at("frames").at(cnt), debug);
+            num_records.at(cnt) = decodeFrame (data, json_data, json_data.at("frames").at(cnt), debug);
         });
+
+        for (auto num_record_it : num_records)
+            num_records_sum += num_record_it;
     }
 
+    if (debug)
+        loginf << "frames decoded, num frames " << num_records_sum;
+
+    return num_records_sum;
 }
 
 size_t FrameParser::decodeFrame (const char* data, nlohmann::json& json_data, nlohmann::json& json_frame, bool debug)
@@ -129,6 +141,7 @@ size_t FrameParser::decodeFrame (const char* data, nlohmann::json& json_data, nl
     size_t index {frame_content.at("index")};
     size_t length {frame_content.at("length")};
     size_t parsed_bytes {0};
+    size_t num_records {0};
 
     if (debug)
         loginf << "frame parser decoding frame at index " << index << " length " << length;
@@ -200,12 +213,13 @@ size_t FrameParser::decodeFrame (const char* data, nlohmann::json& json_data, nl
         if (debug)
             loginf << "frame parser decoding record with cat " << cat << " index " << record_index
                      << ": " << record_content.at(record_content_name).dump(4) << "'";
+        ++num_records;
     }
     else if (debug)
         loginf << "frame parser decoding record with cat " << cat << " index " << record_index
              << " length " << record_length << " skipped since cat definition is missing ";
 
-    return parsed_bytes;
+    return num_records;
 }
 
 }

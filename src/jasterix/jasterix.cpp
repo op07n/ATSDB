@@ -159,13 +159,13 @@ size_t jASTERIX::scopeFrames()
     return json_data_.at("frames").size();
 }
 
-void jASTERIX::decodeFrames()
+size_t jASTERIX::decodeFrames()
 {
     assert (frame_parser_);
     assert (file_.is_open());
     assert (json_data_ != nullptr);
 
-    frame_parser_->decodeFrames(file_.data(), json_data_, debug_);
+    return frame_parser_->decodeFrames(file_.data(), json_data_, debug_);
 }
 
 void jASTERIX::printData()

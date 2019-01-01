@@ -98,26 +98,27 @@ int main (int argc, char **argv)
         boost::posix_time::time_duration diff = boost::posix_time::microsec_clock::local_time() - start_time;
 
         string time_str = to_string(diff.hours())+"h "+to_string(diff.minutes())+"m "+to_string(diff.seconds())+"s "+
-                to_string(diff.total_milliseconds())+"ms";
+                to_string(diff.total_milliseconds()%1000)+"ms";
 
-        double seconds = diff.total_seconds()+diff.total_milliseconds()/1000.0;
+        double seconds = diff.total_milliseconds()/1000.0;
 
         //if (debug)
-            loginf << "jASTERIX: scoped " << num_frames << " frames in " << time_str << " "
+            loginf << "jASTERIX: scoped " << num_frames << " frames in " << time_str << ": "
                  << num_frames/seconds << " fr/s";
 
-        asterix.decodeFrames();
+        size_t num_records = asterix.decodeFrames();
 
         diff = boost::posix_time::microsec_clock::local_time() - start_time;
 
         time_str = to_string(diff.hours())+"h "+to_string(diff.minutes())+"m "+to_string(diff.seconds())+"s "+
-                to_string(diff.total_milliseconds())+"ms";
+                to_string(diff.total_milliseconds()%1000)+"ms";
 
-        seconds = diff.total_seconds()+diff.total_milliseconds()/1000.0;
+        seconds = diff.total_milliseconds()/1000.0;
 
         //if (debug)
-            loginf << "jASTERIX: decoded " << num_frames << " frames in " << time_str << " "
-                 << num_frames/seconds << " fr/s";
+            loginf << "jASTERIX: decoded " << num_frames << " frames, "
+                   << num_records << " records in " << time_str << ": "
+                 << num_frames/seconds << " fr/s, " << num_records/seconds << " rec/s";
 
         if (debug)
             asterix.printData();

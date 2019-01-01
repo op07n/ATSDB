@@ -17,8 +17,10 @@ public:
              bool debug);
     virtual ~jASTERIX();
 
+    // returns number of frames
     size_t scopeFrames();
-    void decodeFrames();
+    // returns number of decoded records
+    size_t decodeFrames();
 
     void printData();
 
