@@ -17,12 +17,11 @@ public:
              bool debug);
     virtual ~jASTERIX();
 
-    // returns number of frames
-    size_t scopeFrames();
     // returns number of decoded records
-    size_t decodeFrames();
+    void decode ();
 
-    void printData();
+    size_t numFrames() const;
+    size_t numRecords() const;
 
 private:
     std::string filename_;
@@ -39,7 +38,8 @@ private:
     size_t file_size_{0};
     boost::iostreams::mapped_file_source file_;
 
-    nlohmann::json json_data_;
+    size_t num_frames_{0};
+    size_t num_records_{0};
 };
 }
 

@@ -137,40 +137,55 @@ jASTERIX::~jASTERIX()
         file_.close();
 }
 
-size_t jASTERIX::scopeFrames()
+void jASTERIX::decode ()
 {
     assert (frame_parser_);
     assert (file_.is_open());
-    assert (json_data_ == nullptr);
 
-    //cout << "jASTERIX scoping frames" << endl;
+    nlohmann::json json_header;
 
-    frame_parser_->scopeFrames(file_.data(), 0, file_size_, json_data_, debug_);
+    size_t index;
 
-    if (json_data_.find("frames") == json_data_.end())
-        throw runtime_error ("jASTERIX scoped frames information contains no frames");
+    // parsing header
+    index = frame_parser_->parseHeader(file_.data(), 0, file_size_, json_header, debug_);
 
-    if (!json_data_.at("frames").is_array())
-        throw runtime_error ("jASTERIX scoped frames information is not array");
+    nlohmann::json data_chunk;
 
-    if (debug_)
-        loginf << "jASTERIX frame scoping JSON result contains " << json_data_.at("frames").size() << " frames";
+    while (!frame_parser_->done() && file_size_-index > 0)
+    {
+        if (debug_)
+            loginf << "jASTERIX processing index " << index << " size " << file_size_ << ", "
+                   << num_frames_ << " frames, "
+                   << num_records_ << " records";
 
-    return json_data_.at("frames").size();
+        data_chunk = json_header; // copy header
+
+        assert (index < file_size_);
+
+        index += frame_parser_->parseFrames(file_.data(), index, file_size_, data_chunk, 10000, debug_);
+
+        // decoding frames
+        assert (data_chunk != nullptr);
+
+        if (data_chunk.find("frames") == data_chunk.end())
+            throw runtime_error ("jASTERIX scoped frames information contains no frames");
+
+        if (!data_chunk.at("frames").is_array())
+            throw runtime_error ("jASTERIX scoped frames information is not array");
+
+        num_frames_ += data_chunk.at("frames").size();
+        num_records_ += frame_parser_->decodeFrames(file_.data(), data_chunk, debug_);
+    }
 }
 
-size_t jASTERIX::decodeFrames()
+size_t jASTERIX::numFrames() const
 {
-    assert (frame_parser_);
-    assert (file_.is_open());
-    assert (json_data_ != nullptr);
-
-    return frame_parser_->decodeFrames(file_.data(), json_data_, debug_);
+    return num_frames_;
 }
 
-void jASTERIX::printData()
+size_t jASTERIX::numRecords() const
 {
-    loginf << "jASTERIX data: '" << json_data_.dump(4) << "'";
+    return num_records_;
 }
 
 }

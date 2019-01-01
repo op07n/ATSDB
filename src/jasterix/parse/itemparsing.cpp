@@ -20,12 +20,12 @@ size_t parseItem (const nlohmann::json& item_definition, const char* data, size_
     assert (data);
     assert (size);
 
-    if (item_definition.find("name") == item_definition.end())
+    if (debug && item_definition.find("name") == item_definition.end())
         throw runtime_error ("item parsing without JSON name definition");
 
     std::string name = item_definition.at("name");
 
-    if (item_definition.find("type") == item_definition.end())
+    if (debug && item_definition.find("type") == item_definition.end())
         throw runtime_error ("item '"+name+"' parsing without data type definition");
 
     std::string type = item_definition.at("type");
@@ -40,7 +40,7 @@ size_t parseItem (const nlohmann::json& item_definition, const char* data, size_
         if (debug)
             loginf << "parsing skip bytes item '" << name << "'";
 
-        if (item_definition.find("length") == item_definition.end())
+        if (debug && item_definition.find("length") == item_definition.end())
             throw runtime_error ("fixed bytes item '"+name+"' parsing without length");
 
         unsigned int length = item_definition.at("length");
@@ -105,12 +105,12 @@ size_t parseFixedBytesItem (const std::string& name, const std::string& type, co
     if (debug)
         loginf << "parsing fixed bytes item '" << name << "'";
 
-    if (item_definition.find("length") == item_definition.end())
+    if (debug && item_definition.find("length") == item_definition.end())
         throw runtime_error ("fixed bytes item '"+name+"' parsing without length");
 
     unsigned int length = item_definition.at("length");
 
-    if (item_definition.find("data_type") == item_definition.end())
+    if (debug && item_definition.find("data_type") == item_definition.end())
         throw runtime_error ("fixed bytes item '"+name+"' parsing without data type");
 
     std::string data_type = item_definition.at("data_type");
@@ -288,12 +288,12 @@ size_t parseDynamicBytesItem (const std::string& name, const std::string& type, 
     if (debug)
         loginf << "parsing dynamic bytes item '" << name << "'";
 
-    if (item_definition.find("length_variable") == item_definition.end())
+    if (debug && item_definition.find("length_variable") == item_definition.end())
         throw runtime_error ("dynamic bytes item '"+name+"' parsing without length variable");
 
     string length_variable_name = item_definition.at("length_variable");
 
-    if (target.find(length_variable_name) == target.end())
+    if (debug && target.find(length_variable_name) == target.end())
         throw runtime_error ("dynamic bytes item '"+name+"' parsing without given length");
 
     size_t length = target.at(length_variable_name);
@@ -324,22 +324,22 @@ size_t parseCompoundItem (const std::string& name, const std::string& type, cons
     if (debug)
         loginf << "parsing compound item '" << name << "'";
 
-    if (item_definition.find("field_specification") == item_definition.end())
+    if (debug && item_definition.find("field_specification") == item_definition.end())
         throw runtime_error ("compound item '"+name+"' parsing without field specification");
 
     const json& field_specification = item_definition.at("field_specification");
 
-    if (!field_specification.is_object())
+    if (debug && !field_specification.is_object())
         throw runtime_error ("parsing compound item '"+name+"' field specification is not an object");
 
     std::string field_specification_name = field_specification.at("name");
 
-    if (item_definition.find("items") == item_definition.end())
+    if (debug && item_definition.find("items") == item_definition.end())
         throw runtime_error ("parsing compound item '"+name+"' without items");
 
     const json& items = item_definition.at("items");
 
-    if (!items.is_array())
+    if (debug && !items.is_array())
         throw runtime_error ("parsing compound item '"+name+"' field specification is not an array");
 
     if (debug)
@@ -380,7 +380,7 @@ size_t parseExtendtableBitsItem (const std::string& name, const std::string& typ
     if (debug)
         loginf << "parsing extendable bits item '" << name << "'";
 
-    if (item_definition.find("data_type") == item_definition.end())
+    if (debug && item_definition.find("data_type") == item_definition.end())
         throw runtime_error ("extendable bits item '"+name+"' parsing without data type");
 
     bool reverse_bits = (item_definition.find("reverse_bits") != item_definition.end()
@@ -464,12 +464,12 @@ size_t parseExtendtableItem (const std::string& name, const std::string& type,
     if (debug)
         loginf << "parsing extendable item '" << name << "'";
 
-    if (item_definition.find("items") == item_definition.end())
+    if (debug && item_definition.find("items") == item_definition.end())
         throw runtime_error ("parsing extendable item '"+name+"' without items");
 
     const json& items = item_definition.at("items");
 
-    if (!items.is_array())
+    if (debug && !items.is_array())
         throw runtime_error ("parsing extendable item '"+name+"' items specification is not an array");
 
     if (debug)
@@ -498,7 +498,7 @@ size_t parseExtendtableItem (const std::string& name, const std::string& type,
             parsed_bytes += parseItem(data_item_it, data, index+parsed_bytes, size,
                                       parsed_bytes, target["data"][cnt], target, debug);
 
-            if (target.at("data").at(cnt).find("extend") == target.at("data").at(cnt).end())
+            if (debug && target.at("data").at(cnt).find("extend") == target.at("data").at(cnt).end())
                 throw runtime_error ("parsing extendable item '"+name+"' without extend information");
 
             extend = target.at("data").at(cnt).at("extend");
@@ -525,7 +525,7 @@ size_t parseFixedBitfieldItem (const std::string& name, const std::string& type,
 
         std::string optional_variable_name = item_definition.at("optional_variable_name");
 
-        if (item_definition.find("optional_variable_value") == item_definition.end())
+        if (debug && item_definition.find("optional_variable_value") == item_definition.end())
             throw runtime_error ("parsing fixed bitfield item '"+name
                                  +"' optional but no variable value given");
 
@@ -541,7 +541,7 @@ size_t parseFixedBitfieldItem (const std::string& name, const std::string& type,
         }
     }
 
-    if (item_definition.find("length") == item_definition.end())
+    if (debug && item_definition.find("length") == item_definition.end())
         throw runtime_error ("parsing fixed bitfield item '"+name+"' without length");
 
     unsigned int length = item_definition.at("length");
@@ -549,12 +549,12 @@ size_t parseFixedBitfieldItem (const std::string& name, const std::string& type,
     if (length > 8)
         throw runtime_error ("parsing fixed bitfield item '"+name+"' with too big length");
 
-    if (item_definition.find("items") == item_definition.end())
+    if (debug && item_definition.find("items") == item_definition.end())
         throw runtime_error ("parsing fixed bitfield item '"+name+"' without sub-items");
 
     const json& items = item_definition.at("items");
 
-    if (!items.is_array())
+    if (debug && !items.is_array())
         throw runtime_error ("parsing fixed bitfield item '"+name+"' sub-items specification is not an array");
 
     std::string subitem_name;
@@ -579,12 +579,12 @@ size_t parseFixedBitsItem (const std::string& name, const std::string& type, con
     if (debug)
         loginf << "parsing fixed bits item '" << name << "'";
 
-    if (item_definition.find("start_bit") == item_definition.end())
+    if (debug && item_definition.find("start_bit") == item_definition.end())
         throw runtime_error ("parsing fixed byte bitfield item '"+name+"' without start bit");
 
     unsigned int start_bit = item_definition.at("start_bit");
 
-    if (item_definition.find("bit_length") == item_definition.end())
+    if (debug && item_definition.find("bit_length") == item_definition.end())
         throw runtime_error ("parsing fixed byte bitfield item '"+name+"' without bit length");
 
     unsigned int bit_length = item_definition.at("bit_length");
@@ -652,24 +652,24 @@ size_t parseOptionalItem (const std::string& name, const std::string& type, cons
     if (debug)
         loginf << "parsing optional item '" << name << "'";
 
-    if (item_definition.find("optional_bitfield_name") == item_definition.end())
+    if (debug && item_definition.find("optional_bitfield_name") == item_definition.end())
         throw runtime_error ("optional item '"+name+"' parsing without bitfield name");
 
     string bitfield_name = item_definition.at("optional_bitfield_name");
 
-    if (item_definition.find("optional_bitfield_index") == item_definition.end())
+    if (debug && item_definition.find("optional_bitfield_index") == item_definition.end())
         throw runtime_error ("optional item '"+name+"' parsing without bitfield index");
 
     unsigned int bitfield_index = item_definition.at("optional_bitfield_index");
 
     assert (parent != nullptr);
 
-    if (parent.find(bitfield_name) == parent.end())
+    if (debug && parent.find(bitfield_name) == parent.end())
         throw runtime_error ("parsing optional item '"+name+"' without defined bitfield '"+bitfield_name+"'");
 
     const json& bitfield = parent.at(bitfield_name);
 
-    if (!bitfield.is_array())
+    if (debug && !bitfield.is_array())
         throw runtime_error ("parsing optional item '"+name+"' with non-array bitfield '"+bitfield_name+"'");
 
     if (bitfield_index >= bitfield.size())
@@ -680,7 +680,7 @@ size_t parseOptionalItem (const std::string& name, const std::string& type, cons
         return 0;
     }
 
-    if (!bitfield.at(bitfield_index).is_boolean())
+    if (debug && !bitfield.at(bitfield_index).is_boolean())
         throw runtime_error ("parsing optional item '"+name+"' with non-boolean bitfield '"+bitfield_name+"' value");
 
     if (debug)
@@ -689,12 +689,12 @@ size_t parseOptionalItem (const std::string& name, const std::string& type, cons
 
     bool item_exists = bitfield.at(bitfield_index);
 
-    if (item_definition.find("data_fields") == item_definition.end())
+    if (debug && item_definition.find("data_fields") == item_definition.end())
         throw runtime_error ("parsing optional item '"+name+"' without sub-items");
 
     const json& data_fields = item_definition.at("data_fields");
 
-    if (!data_fields.is_array())
+    if (debug && !data_fields.is_array())
         throw runtime_error ("parsing optional item '"+name+"' data fields container is not an array");
 
     if (debug)
@@ -730,23 +730,23 @@ size_t parseRepetitiveItem (const std::string& name, const std::string& type, co
     if (debug)
         loginf << "parsing repetitive item '" << name << "'";
 
-    if (item_definition.find("repetition_item") == item_definition.end())
+    if (debug && item_definition.find("repetition_item") == item_definition.end())
         throw runtime_error ("repetitive item '"+name+"' parsing without repetition item specification");
 
     const json& repetition_item = item_definition.at("repetition_item");
 
-    if (!repetition_item.is_object())
+    if (debug && !repetition_item.is_object())
         throw runtime_error ("parsing repetitive item '"+name+"' repetition item specification is not an object");
 
-    if (repetition_item.at("name") != "rep")
+    if (debug && repetition_item.at("name") != "rep")
         throw runtime_error ("parsing repetitive item '"+name+"' repetition item specification has to be named 'rep'");
 
-    if (item_definition.find("items") == item_definition.end())
+    if (debug && item_definition.find("items") == item_definition.end())
         throw runtime_error ("parsing repetitive item '"+name+"' without items");
 
     const json& items = item_definition.at("items");
 
-    if (!items.is_array())
+    if (debug && !items.is_array())
         throw runtime_error ("parsing repetitive item '"+name+"' items specification is not an array");
 
     if (debug)

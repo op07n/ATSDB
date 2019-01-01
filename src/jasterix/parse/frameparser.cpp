@@ -36,31 +36,12 @@ FrameParser::FrameParser(const json& framing_definition, const json& record_defi
     frame_items_ = framing_definition_.at("frame_items");
 }
 
-void FrameParser::scopeFrames (const char* data, size_t index, size_t size, json& json_data,
-                                           bool debug)
-{
-    assert (data);
-    assert (size);
-
-    if (debug)
-        loginf << "frame header start index " << index << " size '" << size << "'";
-
-    index += parseHeader(data, index, size, json_data, debug);
-
-    if (debug)
-        loginf << "frame header parsed, index " << index << " bytes";
-
-    index += parseFrames(data, index, size, json_data, debug);
-
-    if (debug)
-        loginf << "frames scoped, index " << index << " bytes";
-}
-
 size_t FrameParser::parseHeader (const char* data, size_t index, size_t size, json& target, bool debug)
 {
     assert (data);
     assert (size);
     assert (index < size);
+    //assert (target != nullptr);
 
     size_t parsed_bytes {0};
 
@@ -73,17 +54,21 @@ size_t FrameParser::parseHeader (const char* data, size_t index, size_t size, js
     return parsed_bytes;
 }
 
-size_t FrameParser::parseFrames (const char* data, size_t index, size_t size, json& target, bool debug)
+
+size_t FrameParser::parseFrames (const char* data, size_t index, size_t size, nlohmann::json& target, size_t num_frames,
+                 bool debug)
 {
     assert (data);
     assert (size);
     assert (index < size);
+    assert (target != nullptr);
+    assert (!done_);
 
     size_t parsed_bytes {0};
     size_t current_parsed_bytes {0};
     size_t frames_cnt {0};
 
-    while (index+parsed_bytes < size)
+    while (index+parsed_bytes < size && frames_cnt < num_frames)
     {
         current_parsed_bytes = 0;
         for (auto& j_item : frame_items_)
@@ -95,20 +80,26 @@ size_t FrameParser::parseFrames (const char* data, size_t index, size_t size, js
         ++frames_cnt;
     }
 
+    if (index+parsed_bytes == size)
+        done_ = true;
+
     return parsed_bytes;
 }
 
-size_t FrameParser::decodeFrames (const char* data, json& json_data, bool debug)
+size_t FrameParser::decodeFrames (const char* data, json& target, bool debug)
 {
-    size_t num_frames = json_data.at("frames").size();
+    assert (data);
+    assert (target != nullptr);
+
+    size_t num_frames = target.at("frames").size();
 
     size_t num_records_sum {0};
 
     if (debug) // switch to single thread in debug
     {
-        for (json& frame_it : json_data.at("frames"))
+        for (json& frame_it : target.at("frames"))
         {
-            num_records_sum += decodeFrame (data, json_data, frame_it, debug);
+            num_records_sum += decodeFrame (data, frame_it, debug);
         }
     }
     else
@@ -118,7 +109,7 @@ size_t FrameParser::decodeFrames (const char* data, json& json_data, bool debug)
 
         tbb::parallel_for( size_t(0), num_frames, [&]( size_t cnt )
         {
-            num_records.at(cnt) = decodeFrame (data, json_data, json_data.at("frames").at(cnt), debug);
+            num_records.at(cnt) = decodeFrame (data, target.at("frames").at(cnt), debug);
         });
 
         for (auto num_record_it : num_records)
@@ -131,9 +122,14 @@ size_t FrameParser::decodeFrames (const char* data, json& json_data, bool debug)
     return num_records_sum;
 }
 
-size_t FrameParser::decodeFrame (const char* data, nlohmann::json& json_data, nlohmann::json& json_frame, bool debug)
+bool FrameParser::done() const
 {
-    if (json_frame.find("content") == json_frame.end())
+    return done_;
+}
+
+size_t FrameParser::decodeFrame (const char* data, json& json_frame, bool debug)
+{
+    if (debug && json_frame.find("content") == json_frame.end())
         throw runtime_error("frame parser scoped frames does not contain correct content");
 
     json& frame_content = json_frame.at("content");
@@ -175,22 +171,22 @@ size_t FrameParser::decodeFrame (const char* data, nlohmann::json& json_data, nl
     // check record information
     json& record = frame_content.at(data_block_name);
 
-    if (record.find ("category") == record.end())
+    if (debug && record.find ("category") == record.end())
         throw runtime_error("frame parser record does not contain category information");
 
     unsigned int cat = record.at("category");
 
-    if (record.find ("content") == record.end())
+    if (debug && record.find ("content") == record.end())
         throw runtime_error("frame parser record does not contain content information");
 
     json& record_content = record.at("content");
 
-    if (record_content.find ("index") == record_content.end())
+    if (debug && record_content.find ("index") == record_content.end())
         throw runtime_error("frame parser record content does not contain index information");
 
     size_t record_index = record_content.at("index");
 
-    if (record_content.find ("length") == record_content.end())
+    if (debug && record_content.find ("length") == record_content.end())
         throw runtime_error("frame parser record content does not contain length information");
 
     size_t record_length = record_content.at("length");
