@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <boost/iostreams/device/mapped_file.hpp>
+#include "boost/thread/mutex.hpp"
 
 #include "json.hpp"
 #include "frameparser.h"
@@ -23,6 +24,8 @@ public:
     size_t numFrames() const;
     size_t numRecords() const;
 
+    void addDataChunk (nlohmann::json& data_chunk);
+
 private:
     std::string filename_;
     std::string definition_path_;
@@ -37,6 +40,9 @@ private:
 
     size_t file_size_{0};
     boost::iostreams::mapped_file_source file_;
+
+    boost::mutex data_mutex_;
+    std::vector<nlohmann::json> data_chunks_;
 
     size_t num_frames_{0};
     size_t num_records_{0};

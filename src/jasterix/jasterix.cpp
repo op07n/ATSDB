@@ -2,10 +2,13 @@
 #include "jasterix_files.h"
 #include "jasterix_logger.h"
 #include "frameparser.h"
+#include "frameparsertask.h"
 
 #include <exception>
 #include <fstream>
 #include <iostream>
+#include <thread>
+#include <chrono>
 
 using namespace nlohmann;
 
@@ -149,32 +152,46 @@ void jASTERIX::decode ()
     // parsing header
     index = frame_parser_->parseHeader(file_.data(), 0, file_size_, json_header, debug_);
 
-    nlohmann::json data_chunk;
+    FrameParserTask* task = new (tbb::task::allocate_root()) FrameParserTask (
+                *this, *frame_parser_.get(), json_header, file_.data(), index, file_size_, debug_);
+    tbb::task::enqueue(*task);
 
-    while (!frame_parser_->done() && file_size_-index > 0)
+    bool has_data = false;
+
+    while (1)
     {
-        if (debug_)
-            loginf << "jASTERIX processing index " << index << " size " << file_size_ << ", "
-                   << num_frames_ << " frames, "
-                   << num_records_ << " records";
+        {
+            boost::mutex::scoped_lock(data_mutex_);
 
-        data_chunk = json_header; // copy header
+            if (frame_parser_->done() && data_chunks_.size() == 0)
+                break;
 
-        assert (index < file_size_);
+            has_data = data_chunks_.size() > 0;
+        }
 
-        index += frame_parser_->parseFrames(file_.data(), index, file_size_, data_chunk, 10000, debug_);
+        if (has_data)
+        {
+            if (debug_)
+                loginf << "jASTERIX processing index " << index << " size " << file_size_ << ", "
+                       << num_frames_ << " frames, "
+                       << num_records_ << " records";
 
-        // decoding frames
-        assert (data_chunk != nullptr);
+            nlohmann::json data_chunk;
 
-        if (data_chunk.find("frames") == data_chunk.end())
-            throw runtime_error ("jASTERIX scoped frames information contains no frames");
+            {
+                boost::mutex::scoped_lock(data_mutex_);
 
-        if (!data_chunk.at("frames").is_array())
-            throw runtime_error ("jASTERIX scoped frames information is not array");
+                data_chunk = std::move(data_chunks_.at(0));
+                data_chunks_.erase(data_chunks_.begin());
+            }
 
-        num_frames_ += data_chunk.at("frames").size();
-        num_records_ += frame_parser_->decodeFrames(file_.data(), data_chunk, debug_);
+            num_frames_ += data_chunk.at("frames").size();
+            num_records_ += frame_parser_->decodeFrames(file_.data(), data_chunk, debug_);
+        }
+        else
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
     }
 }
 
@@ -186,6 +203,12 @@ size_t jASTERIX::numFrames() const
 size_t jASTERIX::numRecords() const
 {
     return num_records_;
+}
+
+void jASTERIX::addDataChunk (nlohmann::json& data_chunk)
+{
+    boost::mutex::scoped_lock(data_mutex_);
+    data_chunks_.push_back(std::move(data_chunk));
 }
 
 }
