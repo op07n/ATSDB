@@ -29,10 +29,17 @@ size_t parseCompoundItem (const std::string& name, const std::string& type, cons
                           const char* data, size_t index, size_t size, size_t current_parsed_bytes,
                           nlohmann::json& target, nlohmann::json& parent, bool debug);
 
+// parses all bits per byte into array<bool>, the last of each byte signifying the extension into next byte
 size_t parseExtendtableBitsItem (const std::string& name, const std::string& type,
                                  const nlohmann::json& item_definition,const char* data, size_t index, size_t size,
                                  size_t current_parsed_bytes, nlohmann::json& target, nlohmann::json& parent,
                                  bool debug);
+
+// parses item into array, extend into next has to signified by bool extend
+size_t parseExtendtableItem (const std::string& name, const std::string& type,
+                             const nlohmann::json& item_definition,const char* data, size_t index, size_t size,
+                             size_t current_parsed_bytes, nlohmann::json& target, nlohmann::json& parent,
+                             bool debug);
 
 size_t parseFixedBitfieldItem (const std::string& name, const std::string& type,
                                const nlohmann::json& item_definition,const char* data, size_t index, size_t size,
@@ -44,6 +51,10 @@ size_t parseFixedBitsItem (const std::string& name, const std::string& type, con
                            nlohmann::json& target, nlohmann::json& parent, bool debug);
 
 size_t parseOptionalItem (const std::string& name, const std::string& type, const nlohmann::json& item_definition,
+                           const char* data, size_t index, size_t size, size_t current_parsed_bytes,
+                           nlohmann::json& target, nlohmann::json& parent, bool debug);
+
+size_t parseRepetitiveItem (const std::string& name, const std::string& type, const nlohmann::json& item_definition,
                            const char* data, size_t index, size_t size, size_t current_parsed_bytes,
                            nlohmann::json& target, nlohmann::json& parent, bool debug);
 

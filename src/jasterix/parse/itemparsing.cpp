@@ -1,5 +1,6 @@
 #include "itemparsing.h"
 #include "jasterix_logger.h"
+#include "base64.h"
 
 #include <iostream>
 #include <cassert>
@@ -64,6 +65,11 @@ size_t parseItem (const nlohmann::json& item_definition, const char* data, size_
         return parseExtendtableBitsItem(name, type, item_definition, data, index, size, current_parsed_bytes, target,
                                         parent, debug);
     }
+    else if (type == "extendable")
+    {
+        return parseExtendtableItem(name, type, item_definition, data, index, size, current_parsed_bytes, target,
+                                        parent, debug);
+    }
     else if (type == "fixed_bitfield")
     {
         return parseFixedBitfieldItem(name, type, item_definition, data, index, size, current_parsed_bytes, target,
@@ -77,6 +83,11 @@ size_t parseItem (const nlohmann::json& item_definition, const char* data, size_
     else if (type == "optional_item")
     {
         return parseOptionalItem(name, type, item_definition, data, index, size, current_parsed_bytes, target,
+                                      parent, debug);
+    }
+    else if (type == "repetitive")
+    {
+        return parseRepetitiveItem(name, type, item_definition, data, index, size, current_parsed_bytes, target,
                                       parent, debug);
     }
     else
@@ -237,6 +248,30 @@ size_t parseFixedBytesItem (const std::string& name, const std::string& type, co
 
         assert (target.find(name) == target.end());
         target[name] = data_int;
+
+        return length;
+    }
+    if (data_type == "bin")
+    {
+        std::string data_str = base64_encode(reinterpret_cast<const unsigned char*>(current_data), length);
+
+        if (debug)
+        {
+            stringstream ss;
+            unsigned char tmp;
+            for (unsigned int cnt=0; cnt < length; ++cnt)
+            {
+                tmp = current_data[cnt];
+                ss << std::setfill('0') << std::setw(2) << std::hex << (int)tmp;
+            }
+
+            loginf << "fixed bytes item '"+name+"' parsing index " << index << " length " << length
+                   << " data type " << data_type << " value '" << data_str << "'"
+                   << " value hex '" << ss.str() << "'";
+        }
+
+        assert (target.find(name) == target.end());
+        target[name] = data_str;
 
         return length;
     }
@@ -419,6 +454,62 @@ size_t parseExtendtableBitsItem (const std::string& name, const std::string& typ
         throw runtime_error ("extentable bits item '"+name+"' parsing with unknown data type '"+data_type+"'");
 }
 
+size_t parseExtendtableItem (const std::string& name, const std::string& type,
+                             const nlohmann::json& item_definition,const char* data, size_t index, size_t size,
+                             size_t current_parsed_bytes, nlohmann::json& target, nlohmann::json& parent,
+                             bool debug)
+{
+    assert (type == "extendable");
+
+    if (debug)
+        loginf << "parsing extendable item '" << name << "'";
+
+    if (item_definition.find("items") == item_definition.end())
+        throw runtime_error ("parsing extendable item '"+name+"' without items");
+
+    const json& items = item_definition.at("items");
+
+    if (!items.is_array())
+        throw runtime_error ("parsing extendable item '"+name+"' items specification is not an array");
+
+    if (debug)
+        loginf << "parsing extendable item '" << name << "' with " << items.size() << " items";
+
+    size_t parsed_bytes {0};
+
+    if (debug)
+        loginf << "parsing extendable item '"+name+"' items";
+
+    std::string item_name;
+
+    unsigned int extend = 1;
+    unsigned int cnt = 0;
+
+    while (extend)
+    {
+        for (const json& data_item_it : items)
+        {
+            item_name = data_item_it.at("name");
+
+            if (debug)
+                loginf << "parsing extendable item '" << name << "' data item '" << item_name << "' index "
+                       << index+parsed_bytes << " cnt " << cnt;
+
+            parsed_bytes += parseItem(data_item_it, data, index+parsed_bytes, size,
+                                      parsed_bytes, target["data"][cnt], target, debug);
+
+            if (target.at("data").at(cnt).find("extend") == target.at("data").at(cnt).end())
+                throw runtime_error ("parsing extendable item '"+name+"' without extend information");
+
+            extend = target.at("data").at(cnt).at("extend");
+
+            ++cnt;
+        }
+    }
+
+    return parsed_bytes;
+}
+
 size_t parseFixedBitfieldItem (const std::string& name, const std::string& type,
                                const nlohmann::json& item_definition,const char* data, size_t index, size_t size,
                                size_t current_parsed_bytes, nlohmann::json& target, nlohmann::json& parent,
@@ -578,8 +669,19 @@ size_t parseOptionalItem (const std::string& name, const std::string& type, cons
 
     const json& bitfield = parent.at(bitfield_name);
 
-    if (!bitfield.is_array() || bitfield_index >= bitfield.size() || !bitfield.at(bitfield_index).is_boolean())
-        throw runtime_error ("parsing optional item '"+name+"' with improper bitfield '"+bitfield_name+"'");
+    if (!bitfield.is_array())
+        throw runtime_error ("parsing optional item '"+name+"' with non-array bitfield '"+bitfield_name+"'");
+
+    if (bitfield_index >= bitfield.size())
+    {
+        if (debug)
+            loginf << "parsing optional item '" << name << "' bitfield length " << bitfield.size()
+                   << " index " << bitfield_index << " out of fspec size";
+        return 0;
+    }
+
+    if (!bitfield.at(bitfield_index).is_boolean())
+        throw runtime_error ("parsing optional item '"+name+"' with non-boolean bitfield '"+bitfield_name+"' value");
 
     if (debug)
         loginf << "parsing optional item '" << name << "' bitfield length " << bitfield.size()
@@ -615,6 +717,70 @@ size_t parseOptionalItem (const std::string& name, const std::string& type, cons
 
     if (debug)
         loginf << "parsing optional item '"+name+"' done, " << parsed_bytes << " bytes parsed";
+
+    return parsed_bytes;
+}
+
+size_t parseRepetitiveItem (const std::string& name, const std::string& type, const nlohmann::json& item_definition,
+                           const char* data, size_t index, size_t size, size_t current_parsed_bytes,
+                           nlohmann::json& target, nlohmann::json& parent, bool debug)
+{
+    assert (type == "repetitive");
+
+    if (debug)
+        loginf << "parsing repetitive item '" << name << "'";
+
+    if (item_definition.find("repetition_item") == item_definition.end())
+        throw runtime_error ("repetitive item '"+name+"' parsing without repetition item specification");
+
+    const json& repetition_item = item_definition.at("repetition_item");
+
+    if (!repetition_item.is_object())
+        throw runtime_error ("parsing repetitive item '"+name+"' repetition item specification is not an object");
+
+    if (repetition_item.at("name") != "rep")
+        throw runtime_error ("parsing repetitive item '"+name+"' repetition item specification has to be named 'rep'");
+
+    if (item_definition.find("items") == item_definition.end())
+        throw runtime_error ("parsing repetitive item '"+name+"' without items");
+
+    const json& items = item_definition.at("items");
+
+    if (!items.is_array())
+        throw runtime_error ("parsing repetitive item '"+name+"' items specification is not an array");
+
+    if (debug)
+        loginf << "parsing repetitive item '" << name << "' with " << items.size() << " items";
+
+    size_t parsed_bytes {0};
+
+    if (debug)
+        loginf << "parsing repetitive item '"+name+"' repetition item";
+
+    parsed_bytes = parseItem(repetition_item, data, index+parsed_bytes, size,
+                             parsed_bytes, target, target, debug);
+
+    unsigned int rep = target.at("rep");
+
+    if (debug)
+        loginf << "parsing repetitive item '"+name+"' items " << rep << " times";
+
+    std::string item_name;
+
+    for (unsigned int cnt=0; cnt < rep; ++cnt)
+    {
+        for (const json& data_item_it : items)
+        {
+            item_name = data_item_it.at("name");
+
+            if (debug)
+                loginf << "parsing repetitive item '" << name << "' data item '" << item_name << "' index "
+                       << index+parsed_bytes << " cnt " << cnt;
+
+            parsed_bytes += parseItem(data_item_it, data, index+parsed_bytes, size,
+                                      parsed_bytes, target["data"][cnt], target, debug);
+        }
+    }
 
     return parsed_bytes;
 }
