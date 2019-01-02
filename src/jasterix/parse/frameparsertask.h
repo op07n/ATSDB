@@ -25,7 +25,7 @@ public:
 
             assert (index_ < size_);
 
-            index_ += frame_parser_.parseFrames(data_, index_, size_, data_chunk, 50000, debug_);
+            index_ += frame_parser_.parseFrames(data_, index_, size_, data_chunk, 2000, debug_);
 
             assert (data_chunk != nullptr);
 
