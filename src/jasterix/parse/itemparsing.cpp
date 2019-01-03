@@ -37,18 +37,8 @@ size_t parseItem (const nlohmann::json& item_definition, const char* data, size_
     }
     else if (type == "skip_bytes")
     {
-        if (debug)
-            loginf << "parsing skip bytes item '" << name << "'";
-
-        if (debug && item_definition.find("length") == item_definition.end())
-            throw runtime_error ("fixed bytes item '"+name+"' parsing without length");
-
-        unsigned int length = item_definition.at("length");
-
-        if (debug)
-            loginf << "parsing skipped bytes item '"+name+"' index " << index << " length " << length;
-
-        return length;
+        return parseSkipBytesItem(name, type, item_definition, data, index, size, current_parsed_bytes, target,
+                                  parent, debug);
     }
     else if (type == "dynamic_bytes")
     {
@@ -75,11 +65,11 @@ size_t parseItem (const nlohmann::json& item_definition, const char* data, size_
         return parseFixedBitfieldItem(name, type, item_definition, data, index, size, current_parsed_bytes, target,
                                       parent, debug);
     }
-    else if (type == "fixed_bits")
-    {
-        return parseFixedBitsItem(name, type, item_definition, data, index, size, current_parsed_bytes, target,
-                                  parent, debug);
-    }
+//    else if (type == "fixed_bits")
+//    {
+//        return parseFixedBitsItem(name, type, item_definition, data, index, size, current_parsed_bytes, target,
+//                                  parent, debug);
+//    }
     else if (type == "optional_item")
     {
         return parseOptionalItem(name, type, item_definition, data, index, size, current_parsed_bytes, target,
@@ -98,12 +88,13 @@ size_t parseFixedBytesItem (const std::string& name, const std::string& type, co
                             const char* data, size_t index, size_t size, size_t current_parsed_bytes,
                             nlohmann::json& target, nlohmann::json& parent, bool debug)
 {
-    assert (type == "fixed_bytes");
+    if (debug)
+    {
+        assert (type == "fixed_bytes");
+        loginf << "parsing fixed bytes item '" << name << "'";
+    }
 
     const char* current_data = &data[index];
-
-    if (debug)
-        loginf << "parsing fixed bytes item '" << name << "'";
 
     if (debug && item_definition.find("length") == item_definition.end())
         throw runtime_error ("fixed bytes item '"+name+"' parsing without length");
@@ -279,14 +270,37 @@ size_t parseFixedBytesItem (const std::string& name, const std::string& type, co
         throw runtime_error ("fixed bytes item '"+name+"' parsing with unknown data type '"+data_type+"'");
 }
 
+size_t parseSkipBytesItem (const std::string& name, const std::string& type, const nlohmann::json& item_definition,
+                            const char* data, size_t index, size_t size, size_t current_parsed_bytes,
+                            nlohmann::json& target, nlohmann::json& parent, bool debug)
+{
+    if (debug)
+    {
+        assert (type == "skip_bytes");
+        loginf << "parsing skip bytes item '" << name << "'";
+    }
+
+    if (debug && item_definition.find("length") == item_definition.end())
+        throw runtime_error ("fixed bytes item '"+name+"' parsing without length");
+
+    unsigned int length = item_definition.at("length");
+
+    if (debug)
+        loginf << "parsing skipped bytes item '"+name+"' index " << index << " length " << length;
+
+    return length;
+}
+
+
 size_t parseDynamicBytesItem (const std::string& name, const std::string& type, const nlohmann::json& item_definition,
                             const char* data, size_t index, size_t size, size_t current_parsed_bytes,
                             nlohmann::json& target, nlohmann::json& parent, bool debug)
 {
-    assert (type == "dynamic_bytes");
-
     if (debug)
+    {
+        assert (type == "dynamic_bytes");
         loginf << "parsing dynamic bytes item '" << name << "'";
+    }
 
     if (debug && item_definition.find("length_variable") == item_definition.end())
         throw runtime_error ("dynamic bytes item '"+name+"' parsing without length variable");
@@ -319,10 +333,11 @@ size_t parseCompoundItem (const std::string& name, const std::string& type, cons
                             const char* data, size_t index, size_t size, size_t current_parsed_bytes,
                             nlohmann::json& target, nlohmann::json& parent, bool debug)
 {
-    assert (type == "compound");
-
     if (debug)
+    {
+        assert (type == "compound");
         loginf << "parsing compound item '" << name << "'";
+    }
 
     if (debug && item_definition.find("field_specification") == item_definition.end())
         throw runtime_error ("compound item '"+name+"' parsing without field specification");
@@ -378,7 +393,10 @@ size_t parseExtendtableBitsItem (const std::string& name, const std::string& typ
                             nlohmann::json& target, nlohmann::json& parent, bool debug)
 {
     if (debug)
+    {
+        assert (type == "extendable_bits");
         loginf << "parsing extendable bits item '" << name << "'";
+    }
 
     if (debug && item_definition.find("data_type") == item_definition.end())
         throw runtime_error ("extendable bits item '"+name+"' parsing without data type");
@@ -459,10 +477,11 @@ size_t parseExtendtableItem (const std::string& name, const std::string& type,
                              size_t current_parsed_bytes, nlohmann::json& target, nlohmann::json& parent,
                              bool debug)
 {
-    assert (type == "extendable");
-
     if (debug)
+    {
+        assert (type == "extendable");
         loginf << "parsing extendable item '" << name << "'";
+    }
 
     if (debug && item_definition.find("items") == item_definition.end())
         throw runtime_error ("parsing extendable item '"+name+"' without items");
@@ -516,7 +535,10 @@ size_t parseFixedBitfieldItem (const std::string& name, const std::string& type,
                                bool debug)
 {
     if (debug)
+    {
+        assert (type == "fixed_bitfield");
         loginf << "parsing fixed bitfield item '" << name << "'";
+    }
 
     if (item_definition.find("optional") != item_definition.end() && item_definition.at("optional") == true)
     {
@@ -544,7 +566,7 @@ size_t parseFixedBitfieldItem (const std::string& name, const std::string& type,
     if (debug && item_definition.find("length") == item_definition.end())
         throw runtime_error ("parsing fixed bitfield item '"+name+"' without length");
 
-    unsigned int length = item_definition.at("length");
+    unsigned int length = item_definition.at("length"); // byte length
 
     if (length > 8)
         throw runtime_error ("parsing fixed bitfield item '"+name+"' with too big length");
@@ -558,99 +580,139 @@ size_t parseFixedBitfieldItem (const std::string& name, const std::string& type,
         throw runtime_error ("parsing fixed bitfield item '"+name+"' sub-items specification is not an array");
 
     std::string subitem_name;
+    std::string subitem_type;
 
-    for (const json& sub_item_it : items)
+    if (length == 1)
     {
-        subitem_name = sub_item_it.at("name");
+        unsigned char tmp = *reinterpret_cast<const unsigned char*> (&data[index]);
+        for (const json& sub_item_it : items)
+        {
+            subitem_name = sub_item_it.at("name");
+            subitem_type = sub_item_it.at("type");
 
-        if (debug)
-            loginf << "parsing fixed bitfield item '" << name << "' item '" << subitem_name << "'";
+            if (debug)
+                loginf << "parsing fixed bitfield item '" << name << "' item '" << subitem_name << "'";
 
-        parseItem(sub_item_it, data, index, length, 0, target[subitem_name], target, debug);
+            parseFixedBitsItem(subitem_name, subitem_type, sub_item_it, tmp, target[subitem_name], debug);
+        }
+    }
+    else if (length <= 4)
+    {
+        unsigned int tmp = *reinterpret_cast<const unsigned int*> (&data[index]);
+        for (const json& sub_item_it : items)
+        {
+            subitem_name = sub_item_it.at("name");
+            subitem_type = sub_item_it.at("type");
+
+            if (debug)
+                loginf << "parsing fixed bitfield item '" << name << "' item '" << subitem_name << "'";
+
+            parseFixedBitsItem(subitem_name, subitem_type, sub_item_it, tmp, target[subitem_name], debug);
+        }
+    }
+    else if (length <= 8)
+    {
+        size_t tmp = *reinterpret_cast<const size_t*> (&data[index]);
+        for (const json& sub_item_it : items)
+        {
+            subitem_name = sub_item_it.at("name");
+            subitem_type = sub_item_it.at("type");
+
+            if (debug)
+                loginf << "parsing fixed bitfield item '" << name << "' item '" << subitem_name << "'";
+
+            parseFixedBitsItem(subitem_name, subitem_type, sub_item_it, tmp, target[subitem_name], debug);
+        }
     }
 
     return length;
 }
 
-size_t parseFixedBitsItem (const std::string& name, const std::string& type, const nlohmann::json& item_definition,
-                           const char* data, size_t index, size_t size, size_t current_parsed_bytes,
-                           nlohmann::json& target, nlohmann::json& parent, bool debug)
-{
-    if (debug)
-        loginf << "parsing fixed bits item '" << name << "'";
+//size_t parseFixedBitsItem (const std::string& name, const std::string& type, const nlohmann::json& item_definition,
+//                           const char* data, size_t index, size_t size, size_t current_parsed_bytes,
+//                           nlohmann::json& target, nlohmann::json& parent, bool debug)
+//{
+//    if (debug)
+//    {
+//        assert (type == "fixed_bits");
+//        loginf << "parsing fixed bits item '" << name << "'";
+//    }
 
-    if (debug && item_definition.find("start_bit") == item_definition.end())
-        throw runtime_error ("parsing fixed byte bitfield item '"+name+"' without start bit");
+//    if (debug && item_definition.find("start_bit") == item_definition.end())
+//        throw runtime_error ("parsing fixed byte bitfield item '"+name+"' without start bit");
 
-    unsigned int start_bit = item_definition.at("start_bit");
+//    unsigned int start_bit = item_definition.at("start_bit");
 
-    if (debug && item_definition.find("bit_length") == item_definition.end())
-        throw runtime_error ("parsing fixed byte bitfield item '"+name+"' without bit length");
+//    if (debug && item_definition.find("bit_length") == item_definition.end())
+//        throw runtime_error ("parsing fixed byte bitfield item '"+name+"' without bit length");
 
-    unsigned int bit_length = item_definition.at("bit_length");
-    unsigned int byte_length = size;
+//    unsigned int bit_length = item_definition.at("bit_length");
+//    unsigned int byte_length = size;
 
-    size_t tmp_data{0};
+//    size_t tmp_data{0};
 
-    const char* current_data = &data[index];
+//    const char* current_data = &data[index];
 
-    if (byte_length == 1)
-        tmp_data = *reinterpret_cast<const unsigned char*> (&current_data[0]);
-    else
-    {
-        unsigned char tmp;
-        for (size_t cnt = 0; cnt < byte_length; ++cnt)
-        {
-            tmp = *reinterpret_cast<const unsigned char*> (&current_data[cnt]);
+//    if (byte_length == 1)
+//        tmp_data = *reinterpret_cast<const unsigned char*> (&current_data[0]);
+//    else
+//    {
+//        unsigned char tmp;
+//        for (size_t cnt = 0; cnt < byte_length; ++cnt)
+//        {
+//            tmp = *reinterpret_cast<const unsigned char*> (&current_data[cnt]);
 
-            if (debug)
-                loginf << "fixed byte bitfield item '"+name+"' cnt " << cnt << " byte "
-                       << std::hex << static_cast<unsigned int> (tmp) << " data " << tmp_data;
+//            if (debug)
+//                loginf << "fixed byte bitfield item '"+name+"' cnt " << cnt << " byte "
+//                       << std::hex << static_cast<unsigned int> (tmp) << " data " << tmp_data;
 
-            tmp_data = (tmp_data << 8) + tmp;
-        }
-    }
+//            tmp_data = (tmp_data << 8) + tmp;
+//        }
+//    }
 
-    if (debug)
-        loginf << "parsing fixed bits item '" << name << "'"
-               << " byte length " << byte_length
-               << " current data '" << hex << tmp_data << "'"
-               << " with start bit " << start_bit << " length " << bit_length;
+//    if (debug)
+//        loginf << "parsing fixed bits item '" << name << "'"
+//               << " byte length " << byte_length
+//               << " current data '" << hex << tmp_data << "'"
+//               << " with start bit " << start_bit << " length " << bit_length;
 
-    size_t bitmask {1};
-    bitmask <<= start_bit+bit_length-1;
+//    size_t bitmask {1};
+//    bitmask <<= start_bit+bit_length-1;
 
-    bool bit_set {false};
-    size_t value {0};
+//    bool bit_set {false};
+//    size_t value {0};
 
-    for (unsigned cnt=0; cnt < bit_length; ++cnt)
-    {
-        value <<= 1;
-        bit_set = tmp_data & bitmask;
-        value |= bit_set;
+//    for (unsigned cnt=0; cnt < bit_length; ++cnt)
+//    {
+//        value <<= 1;
+//        bit_set = tmp_data & bitmask;
+//        value |= bit_set;
 
-        if (debug)
-            loginf << "parsing fixed bits item '" << name << "' with bit " << cnt
-                   << " bitmask " << bitmask << " set " << bit_set << " value " << value;
+//        if (debug)
+//            loginf << "parsing fixed bits item '" << name << "' with bit " << cnt
+//                   << " bitmask " << bitmask << " set " << bit_set << " value " << value;
 
-        bitmask >>= 1;
-    }
+//        bitmask >>= 1;
+//    }
 
-    if (debug)
-        loginf << "parsing fixed bits item '" << name << "' with start bit " << start_bit
-               << " length " << bit_length << " value " << value;
+//    if (debug)
+//        loginf << "parsing fixed bits item '" << name << "' with start bit " << start_bit
+//               << " length " << bit_length << " value " << value;
 
-    target = value;
+//    target = value;
 
-    return 0;
-}
+//    return 0;
+//}
 
 size_t parseOptionalItem (const std::string& name, const std::string& type, const nlohmann::json& item_definition,
                            const char* data, size_t index, size_t size, size_t current_parsed_bytes,
                            nlohmann::json& target, nlohmann::json& parent, bool debug)
 {
     if (debug)
+    {
+        assert (type == "optional_item");
         loginf << "parsing optional item '" << name << "'";
+    }
 
     if (debug && item_definition.find("optional_bitfield_name") == item_definition.end())
         throw runtime_error ("optional item '"+name+"' parsing without bitfield name");
@@ -725,10 +787,11 @@ size_t parseRepetitiveItem (const std::string& name, const std::string& type, co
                            const char* data, size_t index, size_t size, size_t current_parsed_bytes,
                            nlohmann::json& target, nlohmann::json& parent, bool debug)
 {
-    assert (type == "repetitive");
-
     if (debug)
+    {
+        assert (type == "repetitive");
         loginf << "parsing repetitive item '" << name << "'";
+    }
 
     if (debug && item_definition.find("repetition_item") == item_definition.end())
         throw runtime_error ("repetitive item '"+name+"' parsing without repetition item specification");
