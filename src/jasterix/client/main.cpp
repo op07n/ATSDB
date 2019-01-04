@@ -54,6 +54,7 @@ int main (int argc, char **argv)
     std::string framing {"netto"};
     std::string definition_path;
     bool debug {false};
+    bool print {false};
 
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -63,6 +64,7 @@ int main (int argc, char **argv)
         ("framing", po::value<std::string>(&framing), "input framine format, as specified in the framing definitions."
                                                       " netto is default")
         ("debug", po::bool_switch(&debug), "print debug output")
+        ("print", po::bool_switch(&print), "print JSON output")
     ;
 
     try
@@ -90,7 +92,7 @@ int main (int argc, char **argv)
             loginf << "jASTERIX: startup with filename '" << filename << "' framing '" << framing
                    << "' definition_path '" << definition_path << "' debug " << debug;
 
-        jASTERIX::jASTERIX asterix (filename, definition_path, framing, debug);
+        jASTERIX::jASTERIX asterix (filename, definition_path, framing, print, debug);
         boost::posix_time::ptime start_time = boost::posix_time::microsec_clock::local_time();
 
         asterix.decode();

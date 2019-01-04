@@ -456,8 +456,7 @@
                 ]
             }
         ]
-    }
-    ,
+    },
     {
         "name":"250",
         "type": "optional_item",

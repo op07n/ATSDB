@@ -15,7 +15,7 @@ class jASTERIX
 {
 public:
     jASTERIX(const std::string& filename, const std::string& definition_path, const std::string& framing_str,
-             bool debug);
+             bool print, bool debug);
     virtual ~jASTERIX();
 
     // returns number of decoded records
@@ -30,6 +30,7 @@ private:
     std::string filename_;
     std::string definition_path_;
     std::string framing_;
+    bool print_ {false};
     bool debug_ {false};
 
     nlohmann::json framing_definition_;

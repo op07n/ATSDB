@@ -18,8 +18,8 @@ using namespace Files;
 using namespace std;
 
 jASTERIX::jASTERIX(const std::string& filename, const std::string& definition_path, const std::string& framing,
-                   bool debug)
-    : filename_(filename), definition_path_(definition_path), framing_(framing), debug_(debug)
+                   bool print, bool debug)
+    : filename_(filename), definition_path_(definition_path), framing_(framing), print_(print), debug_(debug)
 {
     // check and open file
     if (!fileExists(filename_))
@@ -187,6 +187,10 @@ void jASTERIX::decode ()
 
             num_frames_ += data_chunk.at("frames").size();
             num_records_ += frame_parser_->decodeFrames(file_.data(), data_chunk, debug_);
+
+            if (print_)
+                loginf << data_chunk.dump(4);
+
         }
         else
         {
