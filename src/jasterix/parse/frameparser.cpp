@@ -1,5 +1,4 @@
 #include "frameparser.h"
-#include "itemparsing.h"
 #include "jasterix_logger.h"
 
 #include <iostream>
@@ -11,29 +10,74 @@ using namespace nlohmann;
 
 namespace jASTERIX {
 
-FrameParser::FrameParser(const json& framing_definition, const json& record_definition,
+FrameParser::FrameParser(const json& framing_definition, const json& data_block_definition,
                          const std::map<unsigned int, nlohmann::json>& asterix_category_definitions)
-    : framing_definition_(framing_definition), data_block_definition_(record_definition),
-      asterix_category_definitions_(asterix_category_definitions)
 {
-    if (framing_definition_.find("name") == framing_definition_.end())
+    if (framing_definition.find("name") == framing_definition.end())
         throw runtime_error ("frame parser construction without JSON name definition");
 
-    if (framing_definition_.find("header_items") == framing_definition_.end())
+    if (framing_definition.find("header_items") == framing_definition.end())
         throw runtime_error ("frame parser construction without header items");
 
-    if (!framing_definition_.at("header_items").is_array())
+    if (!framing_definition.at("header_items").is_array())
         throw runtime_error ("frame parser construction with header items non-array");
 
-    header_items_ = framing_definition_.at("header_items");
+    std::string item_name;
+    ItemParser* item {nullptr};
 
-    if (framing_definition_.find("frame_items") == framing_definition_.end())
+    for (const json& data_item_it : framing_definition.at("header_items"))
+    {
+        item_name = data_item_it.at("name");
+        item = ItemParser::createItemParser(data_item_it);
+        assert (item);
+        header_items_.push_back(std::unique_ptr<ItemParser>{item});
+    }
+
+    if (framing_definition.find("frame_items") == framing_definition.end())
         throw runtime_error ("frame parser construction without frame items");
 
-    if (!framing_definition_.at("frame_items").is_array())
+    if (!framing_definition.at("frame_items").is_array())
         throw runtime_error ("frame parser construction with frame items non-array");
 
-    frame_items_ = framing_definition_.at("frame_items");
+    for (const json& data_item_it : framing_definition.at("frame_items"))
+    {
+        item_name = data_item_it.at("name");
+        item = ItemParser::createItemParser(data_item_it);
+        assert (item);
+        frame_items_.push_back(std::unique_ptr<ItemParser>{item});
+    }
+
+    // data block
+
+    if (data_block_definition.find("name") == data_block_definition.end())
+        throw runtime_error ("data block construction without JSON name definition");
+
+    data_block_name_ = data_block_definition.at("name");
+
+    if (data_block_definition.find("items") == data_block_definition.end())
+        throw runtime_error ("data block construction without header items");
+
+    if (!data_block_definition.at("items").is_array())
+        throw runtime_error ("data block construction with items non-array");
+
+    for (const json& data_item_it : data_block_definition.at("items"))
+    {
+        item_name = data_item_it.at("name");
+        item = ItemParser::createItemParser(data_item_it);
+        assert (item);
+        data_block_items_.push_back(std::unique_ptr<ItemParser>{item});
+    }
+
+    // asterix definitions
+
+    for (auto& ast_cat_def_it : asterix_category_definitions)
+    {
+        item = ItemParser::createItemParser(ast_cat_def_it.second);
+        assert (item);
+        asterix_category_definitions_.insert(
+                    std::pair<unsigned int, std::unique_ptr<ItemParser>>
+                    (ast_cat_def_it.first, std::unique_ptr<ItemParser>{item}));
+    }
 }
 
 size_t FrameParser::parseHeader (const char* data, size_t index, size_t size, json& target, bool debug)
@@ -47,7 +91,7 @@ size_t FrameParser::parseHeader (const char* data, size_t index, size_t size, js
 
     for (auto& j_item : header_items_)
     {
-        parsed_bytes += parseItem(j_item, data, index+parsed_bytes, size, parsed_bytes, target, target, debug);
+        parsed_bytes += j_item->parseItem(data, index+parsed_bytes, size, parsed_bytes, target, target, debug);
         // HACK target and parent same
     }
 
@@ -73,8 +117,9 @@ size_t FrameParser::parseFrames (const char* data, size_t index, size_t size, nl
         current_parsed_bytes = 0;
         for (auto& j_item : frame_items_)
         {
-            parsed_bytes += parseItem(j_item, data, index+parsed_bytes, size, current_parsed_bytes,
-                                      target["frames"][frames_cnt], target, debug);
+
+            parsed_bytes += j_item->parseItem(data, index+parsed_bytes, size, current_parsed_bytes,
+                                              target["frames"][frames_cnt], target, debug);
             target["frames"][frames_cnt]["cnt"] = frames_cnt;
         }
         ++frames_cnt;
@@ -141,12 +186,10 @@ size_t FrameParser::decodeFrame (const char* data, json& json_frame, bool debug)
     if (debug)
         loginf << "frame parser decoding frame at index " << index << " length " << length;
 
-    std::string data_block_name = data_block_definition_.at("name");
-
-    for (auto& r_item : data_block_definition_.at("items"))
+    for (auto& r_item : data_block_items_)
     {
-        parsed_bytes += parseItem(r_item, data, index+parsed_bytes, length, parsed_bytes,
-                                  frame_content[data_block_name], frame_content, debug);
+        parsed_bytes += r_item->parseItem(data, index+parsed_bytes, length, parsed_bytes,
+                                          frame_content[data_block_name_], frame_content, debug);
         //++record_cnt;
     }
 
@@ -168,7 +211,7 @@ size_t FrameParser::decodeFrame (const char* data, json& json_frame, bool debug)
 //        "frame_relative_time_ms": 2117
 //    }
     // check record information
-    json& record = frame_content.at(data_block_name);
+    json& record = frame_content.at(data_block_name_);
 
     if (debug && record.find ("category") == record.end())
         throw runtime_error("frame parser record does not contain category information");
@@ -198,16 +241,18 @@ size_t FrameParser::decodeFrame (const char* data, json& json_frame, bool debug)
             loginf << "frame parser decoding record with cat " << cat << " index " << record_index
                  << " length " << record_length;
 
-        const json& asterix_category_definition = asterix_category_definitions_.at(cat);
+        //const json& asterix_category_definition = asterix_category_definitions_.at(cat);
 
-        std::string record_content_name = asterix_category_definition.at("name");
+        //std::string record_content_name = asterix_category_definition.at("name");
 
-        parsed_bytes = parseItem(asterix_category_definition, data, record_index, record_length,
-                                 parsed_bytes, record_content[record_content_name], record_content, debug);
+        // TODO
+        parsed_bytes = asterix_category_definitions_.at(cat)->parseItem(
+                    data, record_index, record_length, parsed_bytes,
+                    record_content[asterix_category_definitions_.at(cat)->name()], record_content, debug);
 
         if (debug)
             loginf << "frame parser decoding record with cat " << cat << " index " << record_index
-                     << ": " << record_content.at(record_content_name).dump(4) << "'";
+                     << ": " << record_content.at(asterix_category_definitions_.at(cat)->name()).dump(4) << "'";
         ++num_records;
     }
     else if (debug)
