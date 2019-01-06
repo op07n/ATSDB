@@ -160,14 +160,14 @@ void jASTERIX::decode ()
 
     while (1)
     {
-        {
-            boost::mutex::scoped_lock(data_mutex_);
+//        {
+//            boost::mutex::scoped_lock(data_mutex_);
 
             if (frame_parser_->done() && data_chunks_.size() == 0)
                 break;
 
             has_data = data_chunks_.size() > 0;
-        }
+//        }
 
         if (has_data)
         {
@@ -194,7 +194,7 @@ void jASTERIX::decode ()
         }
         else
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
     }
 }
