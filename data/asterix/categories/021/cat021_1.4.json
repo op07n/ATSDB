@@ -882,11 +882,78 @@
                         "data_fields":
                         [
                             {
-                                "name":"temperatur",
-                                "type":"fixed_bytes",
-                                "length":2,
-                                "data_type":"int"
-                            }
+                            "name":"220",
+                            "type":"compound",
+                            "field_specification":
+                            {
+                                "name":"available",
+                                "type":"extendable_bits",
+                                "data_type":"bitfield"
+                            },
+                            "items":
+                            [
+                                {
+                                    "name":"ws",
+                                    "type": "optional_item",
+                                    "optional_bitfield_name":"available",
+                                    "optional_bitfield_index": 7,
+                                    "data_fields":
+                                    [
+                                        {
+                                            "name":"wind_speed",
+                                            "type":"fixed_bytes",
+                                            "length":2,
+                                            "data_type":"uint"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name":"wd",
+                                    "type": "optional_item",
+                                    "optional_bitfield_name":"available",
+                                    "optional_bitfield_index": 6,
+                                    "data_fields":
+                                    [
+                                        {
+                                            "name":"wind_direction",
+                                            "type":"fixed_bytes",
+                                            "length":2,
+                                            "data_type":"uint"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name":"tmp",
+                                    "type": "optional_item",
+                                    "optional_bitfield_name":"available",
+                                    "optional_bitfield_index": 5,
+                                    "data_fields":
+                                    [
+                                        {
+                                            "name":"temperatur",
+                                            "type":"fixed_bytes",
+                                            "length":2,
+                                            "data_type":"int"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name":"trb",
+                                    "type": "optional_item",
+                                    "optional_bitfield_name":"available",
+                                    "optional_bitfield_index": 4,
+                                    "data_fields":
+                                    [
+                                        {
+                                            "name":"turbulence",
+                                            "type":"fixed_bytes",
+                                            "length":1,
+                                            "data_type":"uint"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
                         ]
                     },
                     {
@@ -1036,7 +1103,7 @@
                         "data_fields":
                         [
                             {
-                                "name":"contributing_receivers",
+                                "name":"trajectory_intent_data",
                                 "type":"repetitive",
                                 "repetition_item" : 
                                     {
@@ -1252,7 +1319,7 @@
                 ]
             },
             {
-                "name":"track_status_first_extend",
+                "name":"surface_capabilties_first_extend",
                 "type":"fixed_bitfield",
                 "length":1,
                 "optional":true,

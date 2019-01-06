@@ -640,8 +640,8 @@
                     {
                         "name":"tcc",
                         "type":"fixed_bits",
-                        "start_bit":4,
-                        "bit_length":2
+                        "start_bit": 4,
+                        "bit_length": 1
                     }
                 ]
             }
