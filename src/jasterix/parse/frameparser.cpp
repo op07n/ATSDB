@@ -2,6 +2,7 @@
 #include "jasterix_logger.h"
 
 #include <iostream>
+#include <iomanip>
 
 #include <tbb/tbb.h>
 
@@ -11,7 +12,7 @@ using namespace nlohmann;
 namespace jASTERIX {
 
 FrameParser::FrameParser(const json& framing_definition, const json& data_block_definition,
-                         const std::map<unsigned int, nlohmann::json>& asterix_category_definitions)
+                         const std::map<unsigned int, nlohmann::json>& asterix_category_definitions, bool debug)
 {
     if (framing_definition.find("name") == framing_definition.end())
         throw runtime_error ("frame parser construction without JSON name definition");
@@ -28,6 +29,10 @@ FrameParser::FrameParser(const json& framing_definition, const json& data_block_
     for (const json& data_item_it : framing_definition.at("header_items"))
     {
         item_name = data_item_it.at("name");
+
+        if (debug)
+            loginf << "frame parser constructing header item '" << item_name << "'";
+
         item = ItemParser::createItemParser(data_item_it);
         assert (item);
         header_items_.push_back(std::unique_ptr<ItemParser>{item});
@@ -42,6 +47,10 @@ FrameParser::FrameParser(const json& framing_definition, const json& data_block_
     for (const json& data_item_it : framing_definition.at("frame_items"))
     {
         item_name = data_item_it.at("name");
+
+        if (debug)
+            loginf << "frame parser constructing frame item '" << item_name << "'";
+
         item = ItemParser::createItemParser(data_item_it);
         assert (item);
         frame_items_.push_back(std::unique_ptr<ItemParser>{item});
@@ -63,6 +72,10 @@ FrameParser::FrameParser(const json& framing_definition, const json& data_block_
     for (const json& data_item_it : data_block_definition.at("items"))
     {
         item_name = data_item_it.at("name");
+
+        if (debug)
+            loginf << "frame parser constructing data block item '" << item_name << "'";
+
         item = ItemParser::createItemParser(data_item_it);
         assert (item);
         data_block_items_.push_back(std::unique_ptr<ItemParser>{item});
@@ -72,6 +85,10 @@ FrameParser::FrameParser(const json& framing_definition, const json& data_block_
 
     for (auto& ast_cat_def_it : asterix_category_definitions)
     {
+
+        if (debug)
+            loginf << "frame parser constructing cat '" << setfill('0') << setw(3) << ast_cat_def_it.first << "'";
+
         item = ItemParser::createItemParser(ast_cat_def_it.second);
         assert (item);
         asterix_category_definitions_.insert(

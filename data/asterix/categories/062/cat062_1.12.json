@@ -803,10 +803,11 @@
                                         "bit_length": 2
                                     },
                                     {
-                                        "name":"rate_of_turn_uint_todo",
+                                        "name":"rate_of_turn",
                                         "type":"fixed_bits",
                                         "start_bit": 1,
-                                        "bit_length": 7
+                                        "bit_length": 7,
+                                        "data_type": "int"
                                     }
                                 ]
                             }
@@ -2995,10 +2996,11 @@
                                         "bit_length": 1
                                     },
                                     {
-                                        "name":"ga_uint_todo",
+                                        "name":"ga",
                                         "type":"fixed_bits",
                                         "start_bit": 0,
-                                        "bit_length": 14
+                                        "bit_length": 14,
+                                        "data_type": "int"
                                     }
                                 ]
                             }
@@ -3164,7 +3166,7 @@
                     {
                         "name":"composed_track_number",
                         "type":"fixed_bitfield",
-                        "length":1,
+                        "length": 3,
                         "items":[
                             {
                                 "name":"system_unit_identification",

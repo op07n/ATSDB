@@ -156,10 +156,9 @@ size_t FixedBytesItemParser::parseItem (const char* data, size_t index, size_t s
             }
         }
 
-        const int negative = (data_uint & (1 << negative_bit_pos_)) != 0;
         int data_int;
 
-        if (negative)
+        if ( (data_uint & (1 << negative_bit_pos_)) != 0)
             data_int = data_uint | ~((1 << negative_bit_pos_) - 1);
         else
             data_int = data_uint;
@@ -173,7 +172,7 @@ size_t FixedBytesItemParser::parseItem (const char* data, size_t index, size_t s
 
         return length_;
     }
-    if (data_type_ == "bin")
+    else if (data_type_ == "bin")
     {
         std::string data_str = base64_encode(reinterpret_cast<const unsigned char*>(current_data), length_);
 

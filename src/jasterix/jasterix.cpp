@@ -131,7 +131,8 @@ jASTERIX::jASTERIX(const std::string& filename, const std::string& definition_pa
         throw runtime_error (string{"jASTERIX parsing error in asterix category definitions: "}+e.what());
     }
 
-    frame_parser_.reset(new FrameParser(framing_definition_, data_block_definition_, asterix_category_definitions_));
+    frame_parser_.reset(new FrameParser(framing_definition_, data_block_definition_, asterix_category_definitions_,
+                                        debug_));
 }
 
 jASTERIX::~jASTERIX()

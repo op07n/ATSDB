@@ -723,10 +723,11 @@
                 "length": 2,
                 "items":[
                     {
-                        "name":"tar_uint_todo",
+                        "name":"tar",
                         "type":"fixed_bits",
                         "start_bit": 0,
-                        "bit_length": 10
+                        "bit_length": 10,
+                        "data_type": "int"
                     }
                 ]
             }
@@ -1000,10 +1001,11 @@
                         "bit_length": 2
                     },
                     {
-                        "name":"altitude_uint_todo",
+                        "name":"altitude",
                         "type":"fixed_bits",
                         "start_bit": 0,
-                        "bit_length": 13
+                        "bit_length": 13,
+                        "data_type": "int"
                     }
                 ]
             }
@@ -1040,10 +1042,11 @@
                         "bit_length": 1
                     },
                     {
-                        "name":"altitude_uint_todo",
+                        "name":"altitude",
                         "type":"fixed_bits",
                         "start_bit": 0,
-                        "bit_length": 13
+                        "bit_length": 13,
+                        "data_type": "int"
                     }
                 ]
             }

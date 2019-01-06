@@ -10,7 +10,7 @@ class FrameParser
 {
 public:
     FrameParser(const nlohmann::json& framing_definition, const nlohmann::json& data_block_definition,
-                const std::map<unsigned int, nlohmann::json>& asterix_category_definitions);
+                const std::map<unsigned int, nlohmann::json>& asterix_category_definitions, bool debug);
 
     // return number of parsed bytes
     size_t parseHeader (const char* data, size_t index, size_t size, nlohmann::json& target, bool debug);

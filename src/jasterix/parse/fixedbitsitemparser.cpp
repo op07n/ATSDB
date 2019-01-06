@@ -21,6 +21,10 @@ FixedBitsItemParser::FixedBitsItemParser (const nlohmann::json& item_definition,
 
     bit_length_ = item_definition.at("bit_length");
 
+    if (start_bit_+bit_length_ > byte_length*8)
+        throw runtime_error ("fixed byte bitfield item '"+name_+"' wrong length "+to_string(byte_length*8)
+                             +" for bitsize "+to_string(start_bit_+bit_length_));
+
     if (byte_length_ == 1)
     {
         bitmask1 = 1;
@@ -53,6 +57,11 @@ FixedBitsItemParser::FixedBitsItemParser (const nlohmann::json& item_definition,
     }
     else
         throw runtime_error ("fixed byte bitfield item '"+name_+"' with length"+to_string(byte_length_));
+
+    if (item_definition.find("data_type") != item_definition.end())
+        data_type_ = item_definition.at("data_type");
+
+    negative_bit_pos_ = start_bit_+bit_length_;
 }
 
 size_t FixedBitsItemParser::parseItem (const char* data, size_t index, size_t size, size_t current_parsed_bytes,
@@ -71,7 +80,21 @@ size_t FixedBitsItemParser::parseItem (const char* data, size_t index, size_t si
             loginf << "parsing fixed bits item '" << name_ << "' with start bit " << start_bit_
                    << " length " << bit_length_ << " value " << (size_t) tmp1;
 
-        target = tmp1;
+        if (data_type_ == "uint")
+            target = tmp1;
+        else if (data_type_ == "int")
+        {
+            int data_int;
+
+            if ((tmp1 & (1 << negative_bit_pos_)) != 0)
+                data_int = tmp1 | ~((1 << negative_bit_pos_) - 1);
+            else
+                data_int = tmp1;
+
+            target = data_int;
+        }
+        else
+            throw runtime_error ("fixed bits item '"+name_+"' parsing with unknown data type '"+data_type_+"'");
     }
     else if (byte_length_ <= 4)
     {
@@ -83,7 +106,22 @@ size_t FixedBitsItemParser::parseItem (const char* data, size_t index, size_t si
             loginf << "parsing fixed bits item '" << name_ << "' with start bit " << start_bit_
                    << " length " << bit_length_ << " value " << (size_t) tmp4;
 
-        target = tmp4;
+        if (data_type_ == "uint")
+            target = tmp4;
+        else if (data_type_ == "int")
+        {
+            int data_int;
+
+            if ((tmp4 & (1 << negative_bit_pos_)) != 0)
+                data_int = tmp4 | ~((1 << negative_bit_pos_) - 1);
+            else
+                data_int = tmp4;
+
+            target = data_int;
+        }
+        else
+            throw runtime_error ("fixed bits item '"+name_+"' parsing with unknown data type '"+data_type_+"'");
+
     }
     else if (byte_length_ <= 8)
     {
@@ -95,8 +133,25 @@ size_t FixedBitsItemParser::parseItem (const char* data, size_t index, size_t si
             loginf << "parsing fixed bits item '" << name_ << "' with start bit " << start_bit_
                    << " length " << bit_length_ << " value " << (size_t) tmp8;
 
-        target = tmp8;
+        if (data_type_ == "uint")
+            target = tmp8;
+        else if (data_type_ == "int")
+        {
+            long int data_int;
+
+            if ((tmp8 & (1 << negative_bit_pos_)) != 0)
+                data_int = tmp8 | ~((1 << negative_bit_pos_) - 1);
+            else
+                data_int = tmp8;
+
+            target = data_int;
+        }
+        else
+            throw runtime_error ("fixed bits item '"+name_+"' parsing with unknown data type '"+data_type_+"'");
+
+
     }
+
 
     return 0;
 }

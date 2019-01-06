@@ -19,6 +19,8 @@ protected:
     unsigned int byte_length_{0};
     unsigned int start_bit_{0};
     unsigned int bit_length_{0};
+    std::string data_type_ {"uint"};
+    unsigned int negative_bit_pos_{0};
 
     unsigned char bitmask1;
     unsigned int bitmask4;

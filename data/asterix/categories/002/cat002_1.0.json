@@ -182,7 +182,7 @@
                     {
                         "name":"plot_count_values",
                         "type":"fixed_bitfield",
-                        "length":1,
+                        "length":2,
                         "items":[
                             {
                                 "name":"a",
