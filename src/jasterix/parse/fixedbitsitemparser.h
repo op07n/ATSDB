@@ -22,6 +22,12 @@ protected:
     std::string data_type_ {"uint"};
     unsigned int negative_bit_pos_{0};
 
+//    unsigned char tmp1;
+//    unsigned int tmp4;
+//    size_t tmp8;
+//    int data_int;
+//    long int data_lint;
+
     unsigned char bitmask1;
     unsigned int bitmask4;
     size_t bitmask8;

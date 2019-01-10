@@ -68,7 +68,7 @@ size_t FixedBitsItemParser::parseItem (const char* data, size_t index, size_t si
                               nlohmann::json& target, nlohmann::json& parent, bool debug)
 {
     if (debug)
-        loginf << "parsing fixed bits item '" << name_ << "'";
+        loginf << "parsing fixed bits item '" << name_ << "' byte length " << byte_length_;
 
     if (byte_length_ == 1)
     {
@@ -81,7 +81,7 @@ size_t FixedBitsItemParser::parseItem (const char* data, size_t index, size_t si
                    << " length " << bit_length_ << " value " << (size_t) tmp1;
 
         if (data_type_ == "uint")
-            target = tmp1;
+            target.emplace(name_, tmp1);
         else if (data_type_ == "int")
         {
             int data_int;
@@ -91,7 +91,7 @@ size_t FixedBitsItemParser::parseItem (const char* data, size_t index, size_t si
             else
                 data_int = tmp1;
 
-            target = data_int;
+            target.emplace(name_, data_int);
         }
         else
             throw runtime_error ("fixed bits item '"+name_+"' parsing with unknown data type '"+data_type_+"'");
@@ -107,7 +107,7 @@ size_t FixedBitsItemParser::parseItem (const char* data, size_t index, size_t si
                    << " length " << bit_length_ << " value " << (size_t) tmp4;
 
         if (data_type_ == "uint")
-            target = tmp4;
+            target.emplace(name_, tmp4);
         else if (data_type_ == "int")
         {
             int data_int;
@@ -117,7 +117,7 @@ size_t FixedBitsItemParser::parseItem (const char* data, size_t index, size_t si
             else
                 data_int = tmp4;
 
-            target = data_int;
+            target.emplace(name_, data_int);
         }
         else
             throw runtime_error ("fixed bits item '"+name_+"' parsing with unknown data type '"+data_type_+"'");
@@ -134,24 +134,21 @@ size_t FixedBitsItemParser::parseItem (const char* data, size_t index, size_t si
                    << " length " << bit_length_ << " value " << (size_t) tmp8;
 
         if (data_type_ == "uint")
-            target = tmp8;
+            target.emplace(name_, tmp8);
         else if (data_type_ == "int")
         {
-            long int data_int;
+            long int data_lint;
 
             if ((tmp8 & (1 << negative_bit_pos_)) != 0)
-                data_int = tmp8 | ~((1 << negative_bit_pos_) - 1);
+                data_lint = tmp8 | ~((1 << negative_bit_pos_) - 1);
             else
-                data_int = tmp8;
+                data_lint = tmp8;
 
-            target = data_int;
+            target.emplace(name_, data_lint);
         }
         else
             throw runtime_error ("fixed bits item '"+name_+"' parsing with unknown data type '"+data_type_+"'");
-
-
     }
-
 
     return 0;
 }

@@ -44,6 +44,10 @@ size_t FixedBytesItemParser::parseItem (const char* data, size_t index, size_t s
         loginf << "parsing fixed bytes item '" << name_ << "'";
     }
 
+    unsigned char tmp{0};
+    size_t data_uint{0};
+    int data_int{0};
+
     const char* current_data = &data[index];
 
     if (data_type_ == "string")
@@ -55,7 +59,7 @@ size_t FixedBytesItemParser::parseItem (const char* data, size_t index, size_t s
                    << " data type " << data_type_ << " value '" << data_str << "'";
 
         assert (target.find(name_) == target.end());
-        target[name_] = data_str;
+        target.emplace(name_, std::move(data_str));
 
         return length_;
     }
@@ -63,10 +67,6 @@ size_t FixedBytesItemParser::parseItem (const char* data, size_t index, size_t s
     {
         if (length_ > sizeof(size_t))
             throw runtime_error ("fixed bytes item '"+name_+"' length larger than "+to_string(sizeof(size_t)));
-
-        size_t data_uint {0};
-
-        unsigned char tmp;
 
         if (reverse_bytes_)
         {
@@ -118,10 +118,6 @@ size_t FixedBytesItemParser::parseItem (const char* data, size_t index, size_t s
         if (length_ > sizeof(size_t))
             throw runtime_error ("fixed bytes item '"+name_+"' length larger than "+to_string(sizeof(size_t)));
 
-        size_t data_uint {0};
-
-        unsigned char tmp;
-
         if (reverse_bytes_)
         {
             for (int cnt = length_-1; cnt >= 0; --cnt)
@@ -156,8 +152,6 @@ size_t FixedBytesItemParser::parseItem (const char* data, size_t index, size_t s
                 data_uint = (data_uint << 8) + tmp;
             }
         }
-
-        int data_int;
 
         if ( (data_uint & (1 << negative_bit_pos_)) != 0)
             data_int = data_uint | ~((1 << negative_bit_pos_) - 1);
@@ -195,7 +189,7 @@ size_t FixedBytesItemParser::parseItem (const char* data, size_t index, size_t s
 
         assert (target.find(name_) == target.end());
         //target[name_] = data_str;
-        target.emplace(name_, data_str);
+        target.emplace(name_, std::move(data_str));
 
         return length_;
     }

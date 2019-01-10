@@ -45,8 +45,13 @@ size_t ExtendableItemParser::parseItem (const char* data, size_t index, size_t s
     unsigned int extend = 1;
     unsigned int cnt = 0;
 
+    assert (target.find(name_) == target.end());
+    json j_data = json::array();
+
     while (extend)
     {
+
+
         for (auto& data_item_it : items_)
         {
             if (debug)
@@ -54,16 +59,18 @@ size_t ExtendableItemParser::parseItem (const char* data, size_t index, size_t s
                        << index+parsed_bytes << " cnt " << cnt;
 
             parsed_bytes += data_item_it->parseItem(data, index+parsed_bytes, size, parsed_bytes,
-                                                    target["data"][cnt], target, debug);
+                                                    j_data[cnt], target, debug);
 
-            if (debug && target.at("data").at(cnt).find("extend") == target.at("data").at(cnt).end())
+            if (debug && j_data.at(cnt).find("extend") == j_data.at(cnt).end())
                 throw runtime_error ("parsing extendable item '"+name_+"' without extend information");
 
-            extend = target.at("data").at(cnt).at("extend");
+            extend = j_data.at(cnt).at("extend");
 
             ++cnt;
         }
     }
+
+    target.emplace(name_, std::move(j_data));
 
     return parsed_bytes;
 }

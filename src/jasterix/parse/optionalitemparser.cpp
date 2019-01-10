@@ -88,7 +88,7 @@ size_t OptionalItemParser::parseItem (const char* data, size_t index, size_t siz
 
     for (auto& df_item : data_fields_)
     {
-        parsed_bytes += df_item->parseItem(data, index+parsed_bytes, size, current_parsed_bytes, target, parent, debug);
+        parsed_bytes += df_item->parseItem(data, index+parsed_bytes, size, current_parsed_bytes, target[name_], parent, debug);
     }
 
     if (debug)

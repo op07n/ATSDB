@@ -60,6 +60,9 @@ size_t RepetetiveItemParser::parseItem (const char* data, size_t index, size_t s
 
     unsigned int rep = target.at("rep");
 
+    assert (target.find(name_) == target.end());
+    json j_data = json::array();
+
     if (debug)
         loginf << "parsing repetitive item '"+name_+"' items " << rep << " times";
 
@@ -72,9 +75,11 @@ size_t RepetetiveItemParser::parseItem (const char* data, size_t index, size_t s
                        << index+parsed_bytes << " cnt " << cnt;
 
             parsed_bytes += data_item_it->parseItem(data, index+parsed_bytes, size, parsed_bytes,
-                                                    target["data"][cnt], target, debug);
+                                                    j_data[cnt], target, debug);
         }
     }
+
+    target.emplace(name_, std::move(j_data));
 
     return parsed_bytes;
 }

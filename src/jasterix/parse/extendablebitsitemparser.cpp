@@ -81,7 +81,7 @@ size_t ExtendableBitsItemParser::parseItem (const char* data, size_t index, size
             ++parsed_bytes;
         }
 
-        target = bitfield;
+        target.emplace(name_, bitfield);
 
         if (debug)
             loginf << "extendable bits item '"+name_+"'" << " index " << index

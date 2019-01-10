@@ -75,7 +75,7 @@ size_t FixedBitFieldItemParser::parseItem (const char* data, size_t index, size_
         if (debug)
             loginf << "parsing fixed bitfield item '" << name_ << "' item '" << sub_item_it->name() << "'";
 
-        sub_item_it->parseItem(data, index, size, current_parsed_bytes, target[sub_item_it->name()], parent, debug);
+        sub_item_it->parseItem(data, index, size, current_parsed_bytes, target, parent, debug);
     }
 
     return length_;

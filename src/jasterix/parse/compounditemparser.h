@@ -18,7 +18,7 @@ public:
     virtual size_t parseItem (const char* data, size_t index, size_t size, size_t current_parsed_bytes,
                               nlohmann::json& target, nlohmann::json& parent, bool debug);
 protected:
-    std::string field_specification_name_;
+    //std::string field_specification_name_;
     std::unique_ptr<ItemParser> field_specification_;
     std::vector<std::unique_ptr<ItemParser>> items_;
 };
