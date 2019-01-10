@@ -41,8 +41,12 @@ size_t DynamicBytesItemParser::parseItem (const char* data, size_t index, size_t
         loginf << "parsing dynamic bytes item '"+name_+"' index " << index << " length " << length;
 
     assert (target.find(name_) == target.end());
-    target[name_]["index"] = index;
-    target[name_]["length"] = length;
+
+    //target[name_] = { {"index", index}, {"length", length} };
+
+    target.emplace(name_, json::object({ {"index", index}, {"length", length} }));
+//    target[name_]["index"] = index;
+//    target[name_]["length"] = length;
 
     return length;
 }

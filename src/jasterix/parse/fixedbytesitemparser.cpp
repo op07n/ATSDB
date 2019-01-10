@@ -108,7 +108,8 @@ size_t FixedBytesItemParser::parseItem (const char* data, size_t index, size_t s
                    << " data type " << data_type_ << " value '" << data_uint << "'";
 
         assert (target.find(name_) == target.end());
-        target[name_] = data_uint;
+        //target[name_] = data_uint;
+        target.emplace(name_, data_uint);
 
         return length_;
     }
@@ -168,7 +169,8 @@ size_t FixedBytesItemParser::parseItem (const char* data, size_t index, size_t s
                    << " data type " << data_type_ << " value '" << data_int << "'";
 
         assert (target.find(name_) == target.end());
-        target[name_] = data_int;
+        //target[name_] = data_int;
+        target.emplace(name_, data_int);
 
         return length_;
     }
@@ -192,7 +194,8 @@ size_t FixedBytesItemParser::parseItem (const char* data, size_t index, size_t s
         }
 
         assert (target.find(name_) == target.end());
-        target[name_] = data_str;
+        //target[name_] = data_str;
+        target.emplace(name_, data_str);
 
         return length_;
     }
