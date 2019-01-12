@@ -129,6 +129,8 @@ size_t FrameParser::parseFrames (const char* data, size_t index, size_t size, nl
     size_t current_parsed_bytes {0};
     size_t frames_cnt {0};
 
+    nlohmann::json& j_frames = target["frames"];
+
     while (index+parsed_bytes < size && frames_cnt < num_frames)
     {
         current_parsed_bytes = 0;
@@ -136,8 +138,8 @@ size_t FrameParser::parseFrames (const char* data, size_t index, size_t size, nl
         {
 
             parsed_bytes += j_item->parseItem(data, index+parsed_bytes, size, current_parsed_bytes,
-                                              target["frames"][frames_cnt], target, debug);
-            target["frames"][frames_cnt]["cnt"] = frames_cnt;
+                                              j_frames[frames_cnt], target, debug);
+            j_frames[frames_cnt]["cnt"] = frames_cnt;
         }
         ++frames_cnt;
     }
@@ -154,23 +156,24 @@ size_t FrameParser::decodeFrames (const char* data, json& target, bool debug)
     assert (target != nullptr);
 
     size_t num_records_sum {0};
+    nlohmann::json& j_frames = target.at("frames");
 
     if (debug) // switch to single thread in debug
     {
-        for (json& frame_it : target.at("frames"))
+        for (json& frame_it : j_frames)
         {
             num_records_sum += decodeFrame (data, frame_it, debug);
         }
     }
     else
     {
-        size_t num_frames = target.at("frames").size();
+        size_t num_frames = j_frames.size();
         std::vector<size_t> num_records;
         num_records.resize(num_frames, 0);
 
         tbb::parallel_for( size_t(0), num_frames, [&]( size_t cnt )
         {
-            num_records.at(cnt) = decodeFrame (data, target.at("frames").at(cnt), debug);
+            num_records.at(cnt) = decodeFrame (data, j_frames.at(cnt), debug);
         });
 
         for (auto num_record_it : num_records)

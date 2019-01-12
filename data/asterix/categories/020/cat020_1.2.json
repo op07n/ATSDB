@@ -324,28 +324,13 @@
                         "bit_length":1
                     },                    
                     {
-                        "name":"a",
+                        "name":"code",
                         "type":"fixed_bits",
-                        "start_bit": 9,
-                        "bit_length":3
-                    },
-                    {
-                        "name":"b",
-                        "type":"fixed_bits",
-                        "start_bit": 6,
-                        "bit_length":3
-                    },
-                    {
-                        "name":"c",
-                        "type":"fixed_bits",
-                        "start_bit": 3,
-                        "bit_length":3
-                    },
-                    {
-                        "name":"d",
-                        "type":"fixed_bits",
+                        "data_type":"digits",
                         "start_bit": 0,
-                        "bit_length":3
+                        "bit_length": 12,
+                        "num_digits": 4,
+                        "digit_bit_length": 3
                     }
                 ]
             }

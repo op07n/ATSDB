@@ -4,7 +4,7 @@
 #include <string>
 #include <map>
 #include <boost/iostreams/device/mapped_file.hpp>
-#include "boost/thread/mutex.hpp"
+#include "tbb/concurrent_queue.h"
 
 #include "json.hpp"
 #include "frameparser.h"
@@ -42,8 +42,8 @@ private:
     size_t file_size_{0};
     boost::iostreams::mapped_file_source file_;
 
-    boost::mutex data_mutex_;
-    std::vector<nlohmann::json> data_chunks_;
+    tbb::concurrent_queue<nlohmann::json> data_chunks_;
+
 
     size_t num_frames_{0};
     size_t num_records_{0};

@@ -157,34 +157,17 @@ void jASTERIX::decode ()
                 *this, *frame_parser_.get(), json_header, file_.data(), index, file_size_, debug_);
     tbb::task::enqueue(*task);
 
-    bool has_data = false;
+    nlohmann::json data_chunk;
 
     while (1)
     {
-//        {
-//            boost::mutex::scoped_lock(data_mutex_);
+        if (frame_parser_->done() && data_chunks_.empty())
+            break;
 
-            if (frame_parser_->done() && data_chunks_.size() == 0)
-                break;
-
-            has_data = data_chunks_.size() > 0;
-//        }
-
-        if (has_data)
+        if (data_chunks_.try_pop(data_chunk))
         {
             if (debug_)
-                loginf << "jASTERIX processing index " << index << " size " << file_size_ << ", "
-                       << num_frames_ << " frames, "
-                       << num_records_ << " records";
-
-            nlohmann::json data_chunk;
-
-            {
-                boost::mutex::scoped_lock(data_mutex_);
-
-                data_chunk = std::move(data_chunks_.at(0));
-                data_chunks_.erase(data_chunks_.begin());
-            }
+                loginf << "jASTERIX processing " << num_frames_ << " frames, " << num_records_ << " records";
 
             num_frames_ += data_chunk.at("frames").size();
             num_records_ += frame_parser_->decodeFrames(file_.data(), data_chunk, debug_);
@@ -193,10 +176,10 @@ void jASTERIX::decode ()
                 loginf << data_chunk.dump(4);
 
         }
-        else
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(5));
-        }
+//        else
+//        {
+//            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+//        }
     }
 }
 
@@ -212,8 +195,7 @@ size_t jASTERIX::numRecords() const
 
 void jASTERIX::addDataChunk (nlohmann::json& data_chunk)
 {
-    boost::mutex::scoped_lock(data_mutex_);
-    data_chunks_.push_back(std::move(data_chunk));
+    data_chunks_.push(std::move(data_chunk));
 }
 
 }
