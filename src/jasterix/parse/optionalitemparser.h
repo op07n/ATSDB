@@ -13,7 +13,7 @@ public:
     virtual ~OptionalItemParser() {}
 
     virtual size_t parseItem (const char* data, size_t index, size_t size, size_t current_parsed_bytes,
-                              nlohmann::json& target, nlohmann::json& parent, bool debug);
+                              nlohmann::json& target, bool debug) override;
 protected:
     std::string bitfield_name_;
     unsigned int bitfield_index_{0};

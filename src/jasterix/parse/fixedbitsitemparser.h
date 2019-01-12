@@ -13,7 +13,7 @@ public:
     virtual ~FixedBitsItemParser() {}
 
     virtual size_t parseItem (const char* data, size_t index, size_t size, size_t current_parsed_bytes,
-                              nlohmann::json& target, nlohmann::json& parent, bool debug);
+                              nlohmann::json& target, bool debug) override;
 
 protected:
     unsigned int byte_length_{0};

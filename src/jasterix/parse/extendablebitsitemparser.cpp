@@ -22,7 +22,7 @@ ExtendableBitsItemParser::ExtendableBitsItemParser (const nlohmann::json& item_d
 }
 
 size_t ExtendableBitsItemParser::parseItem (const char* data, size_t index, size_t size, size_t current_parsed_bytes,
-                                            nlohmann::json& target, nlohmann::json& parent, bool debug)
+                                            nlohmann::json& target, bool debug)
 {
     if (debug)
         loginf << "parsing extendable bits item '" << name_ << "'";

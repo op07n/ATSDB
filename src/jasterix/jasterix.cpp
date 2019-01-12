@@ -195,6 +195,17 @@ size_t jASTERIX::numRecords() const
 
 void jASTERIX::addDataChunk (nlohmann::json& data_chunk)
 {
+    if (debug_)
+    {
+        loginf << "jASTERIX adding data chunk";
+
+        if (data_chunk.find("frames") == data_chunk.end())
+            throw std::runtime_error ("jASTERIX scoped frames information contains no frames");
+
+        if (!data_chunk.at("frames").is_array())
+            throw std::runtime_error ("jASTERIX scoped frames information is not array");
+    }
+
     data_chunks_.push(std::move(data_chunk));
 }
 

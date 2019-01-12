@@ -19,7 +19,7 @@ SkipBytesItemParser::SkipBytesItemParser (const nlohmann::json& item_definition)
 }
 
 size_t SkipBytesItemParser::parseItem (const char* data, size_t index, size_t size, size_t current_parsed_bytes,
-                              nlohmann::json& target, nlohmann::json& parent, bool debug)
+                              nlohmann::json& target, bool debug)
 {
     if (debug)
         loginf << "parsing skipped bytes item '"+name_+"' index " << index << " length " << length_;

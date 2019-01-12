@@ -36,7 +36,7 @@ FixedBytesItemParser::FixedBytesItemParser (const nlohmann::json& item_definitio
 }
 
 size_t FixedBytesItemParser::parseItem (const char* data, size_t index, size_t size, size_t current_parsed_bytes,
-                              nlohmann::json& target, nlohmann::json& parent, bool debug)
+                              nlohmann::json& target, bool debug)
 {
     if (debug)
     {

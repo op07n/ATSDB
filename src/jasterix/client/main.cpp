@@ -89,7 +89,7 @@ int main (int argc, char **argv)
     try
     {
         if (debug)
-            loginf << "jASTERIX: startup with filename '" << filename << "' framing '" << framing
+            loginf << "jASTERIX client: startup with filename '" << filename << "' framing '" << framing
                    << "' definition_path '" << definition_path << "' debug " << debug;
 
         jASTERIX::jASTERIX asterix (filename, definition_path, framing, print, debug);
@@ -108,9 +108,9 @@ int main (int argc, char **argv)
         double seconds = diff.total_milliseconds()/1000.0;
 
         //if (debug)
-            loginf << "jASTERIX: decoded " << num_frames << " frames, "
+            loginf << "jASTERIX client: decoded " << num_frames << " frames, "
                    << num_records << " records in " << time_str << ": "
-                 << num_frames/seconds << " fr/s, " << num_records/seconds << " rec/s";
+                   << num_frames/seconds << " fr/s, " << num_records/seconds << " rec/s";
     }
     catch (exception &ex)
     {

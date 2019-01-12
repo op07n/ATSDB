@@ -56,12 +56,12 @@ FixedBitFieldItemParser::FixedBitFieldItemParser (const nlohmann::json& item_def
 }
 
 size_t FixedBitFieldItemParser::parseItem (const char* data, size_t index, size_t size, size_t current_parsed_bytes,
-                              nlohmann::json& target, nlohmann::json& parent, bool debug)
+                              nlohmann::json& target, bool debug)
 {
     if (debug)
         loginf << "parsing fixed bitfield item '" << name_ << "'";
 
-    if (optional_ && !variableHasValue(parent, optional_variable_name_, optional_variable_value_))
+    if (optional_ && !variableHasValue(target, optional_variable_name_, optional_variable_value_))
     {
         if (debug) //  in '" << parent.dump(4) << "'"
             loginf << "parsing fixed bitfield item '" << name_ << "' skipped since variable '"
@@ -75,7 +75,7 @@ size_t FixedBitFieldItemParser::parseItem (const char* data, size_t index, size_
         if (debug)
             loginf << "parsing fixed bitfield item '" << name_ << "' item '" << sub_item_it->name() << "'";
 
-        sub_item_it->parseItem(data, index, size, current_parsed_bytes, target, parent, debug);
+        sub_item_it->parseItem(data, index, size, current_parsed_bytes, target, debug);
     }
 
     return length_;

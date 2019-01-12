@@ -42,17 +42,15 @@ OptionalItemParser::OptionalItemParser (const nlohmann::json& item_definition)
 }
 
 size_t OptionalItemParser::parseItem (const char* data, size_t index, size_t size, size_t current_parsed_bytes,
-                              nlohmann::json& target, nlohmann::json& parent, bool debug)
+                              nlohmann::json& target, bool debug)
 {
     if (debug)
         loginf << "parsing optional item '" << name_ << "'";
 
-    assert (parent != nullptr);
-
-    if (debug && parent.find(bitfield_name_) == parent.end())
+    if (debug && target.find(bitfield_name_) == target.end())
         throw runtime_error ("parsing optional item '"+name_+"' without defined bitfield '"+bitfield_name_+"'");
 
-    const json& bitfield = parent.at(bitfield_name_);
+    const json& bitfield = target.at(bitfield_name_);
 
     if (debug && !bitfield.is_array())
         throw runtime_error ("parsing optional item '"+name_+"' with non-array bitfield '"+bitfield_name_+"'");
@@ -88,7 +86,7 @@ size_t OptionalItemParser::parseItem (const char* data, size_t index, size_t siz
 
     for (auto& df_item : data_fields_)
     {
-        parsed_bytes += df_item->parseItem(data, index+parsed_bytes, size, current_parsed_bytes, target[name_], parent, debug);
+        parsed_bytes += df_item->parseItem(data, index+parsed_bytes, size, current_parsed_bytes, target[name_], debug);
     }
 
     if (debug)

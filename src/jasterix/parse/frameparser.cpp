@@ -108,8 +108,7 @@ size_t FrameParser::parseHeader (const char* data, size_t index, size_t size, js
 
     for (auto& j_item : header_items_)
     {
-        parsed_bytes += j_item->parseItem(data, index+parsed_bytes, size, parsed_bytes, target, target, debug);
-        // HACK target and parent same
+        parsed_bytes += j_item->parseItem(data, index+parsed_bytes, size, parsed_bytes, target, debug);
     }
 
     return parsed_bytes;
@@ -129,6 +128,9 @@ size_t FrameParser::parseFrames (const char* data, size_t index, size_t size, nl
     size_t current_parsed_bytes {0};
     size_t frames_cnt {0};
 
+    if (debug)
+        loginf << "parsing frames index " << index << " num_frames " << num_frames;
+
     nlohmann::json& j_frames = target["frames"];
 
     while (index+parsed_bytes < size && frames_cnt < num_frames)
@@ -136,9 +138,11 @@ size_t FrameParser::parseFrames (const char* data, size_t index, size_t size, nl
         current_parsed_bytes = 0;
         for (auto& j_item : frame_items_)
         {
+            if (debug)
+                loginf << "parsing frame at index " << index+parsed_bytes << " cnt " << frames_cnt;
 
             parsed_bytes += j_item->parseItem(data, index+parsed_bytes, size, current_parsed_bytes,
-                                              j_frames[frames_cnt], target, debug);
+                                              j_frames[frames_cnt], debug);
             j_frames[frames_cnt]["cnt"] = frames_cnt;
         }
         ++frames_cnt;
@@ -209,7 +213,7 @@ size_t FrameParser::decodeFrame (const char* data, json& json_frame, bool debug)
     for (auto& r_item : data_block_items_)
     {
         parsed_bytes += r_item->parseItem(data, index+parsed_bytes, length, parsed_bytes,
-                                          frame_content[data_block_name_], frame_content, debug);
+                                          frame_content[data_block_name_], debug);
         //++record_cnt;
     }
 
@@ -268,7 +272,7 @@ size_t FrameParser::decodeFrame (const char* data, json& json_frame, bool debug)
         // TODO
         parsed_bytes = asterix_category_definitions_.at(cat)->parseItem(
                     data, record_index, record_length, parsed_bytes,
-                    record_content[asterix_category_definitions_.at(cat)->name()], record_content, debug);
+                    record_content[asterix_category_definitions_.at(cat)->name()], debug);
 
         if (debug)
             loginf << "frame parser decoding record with cat " << cat << " index " << record_index
